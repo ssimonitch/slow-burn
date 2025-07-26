@@ -1,0 +1,7 @@
+# Ignore artifacts:
+dist
+node_modules
+**/*.gen.ts
+package-lock.json
+pnpm-lock.yaml
+.claude/*
