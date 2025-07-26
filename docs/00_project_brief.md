@@ -1,6 +1,6 @@
 # **Frontend Development Overview: AI Fitness Companion**
 
-This document outlines the vision, architecture, and development plan for the frontend portion of the AI Fitness Companion application. It serves as the primary guide for all frontend-related tasks during the MVP development cycle.
+This document outlines the vision, architecture, and development plan for the frontend portion of Slow Burn, an AI Fitness Companion application. It serves as the primary guide for all frontend-related tasks during the MVP development cycle.
 
 ## **1\. Frontend Vision & Core Responsibilities**
 
