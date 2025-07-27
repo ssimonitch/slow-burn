@@ -18,12 +18,12 @@ The frontend is responsible for delivering a fast, intuitive, and engaging user 
 
 Our frontend stack is chosen for performance, developer experience, and a robust ecosystem.
 
-* **Framework:** **React 18+**  
+* **Framework:** **React 19+**  
 * **Build Tool:** **Vite** (for fast development and optimized builds)  
 * **Package Manager:** **pnpm** (for speed and disk space efficiency)  
 * **Language:** **TypeScript** (for type safety and scalability)  
-* **UI Components:** **Shadcn/ui** (or a similar component library for rapid UI development)  
-* **State Management:** **React Context** for simple global state (e.g., user authentication) and **Zustand** or **React Query** for managing server state and caching API data.  
+* **UI Components:** **Shadcn/ui** (for rapid UI development)
+* **State Management:** **React Context** for simple global state (e.g., user authentication) and **Zustand** for managing server state and caching API data.  
 * **Styling:** **Tailwind CSS** (for utility-first styling)  
 * **Linting/Formatting:** **ESLint** and **Prettier**, managed with **Husky** pre-commit hooks.
 
