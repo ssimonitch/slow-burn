@@ -12,6 +12,7 @@ The frontend is responsible for delivering a fast, intuitive, and engaging user 
 * Implement a real-time chat interface for interacting with the AI companion.  
 * Manage application state, including user data, workout information, and session tokens.  
 * Handle all communication with the backend FastAPI server.  
+* Manage authentication directly with Supabase using the client-side SDK.
 * Ensure a reliable offline experience, allowing users to log workouts even without an internet connection.
 
 ## **2\. Technology Stack & Tooling**
@@ -34,6 +35,7 @@ The application will be structured as a Single Page Application (SPA) and a Prog
 * **Component Structure:** We will use a feature-based folder structure. For example, all components related to workout logging will reside in a features/workout-logging/ directory. This keeps related logic, components, and hooks organized.  
 * **Routing:** Client-side routing will be handled by react-router-dom. Routes will be protected based on the user's authentication status.  
 * **API Communication:** A dedicated API client service (using fetch or axios) will be created to handle all requests to the backend. This service will be responsible for attaching authentication tokens to headers and handling standard API responses and errors.  
+* **Authentication Architecture:** The frontend handles all authentication flows directly with Supabase using the supabase-js client library. This includes sign up, login, password reset, and session management. The backend acts as a secure resource server that validates JWTs but does not provide authentication endpoints.  
 * **PWA & Offline Strategy:** The Vite PWA plugin will be used to configure the service worker. The service worker will cache the application shell (the core UI) and static assets. For offline functionality, workout logging data will be stored locally (e.g., using IndexedDB via a library like Dexie.js) when the user is offline and then synced with the backend server once a connection is re-established.
 
 ## **4\. Frontend MVP Sprint Plan (8 Weeks)**
@@ -43,7 +45,7 @@ This timeline details the frontend-specific goals and tasks for each sprint of t
 | Sprint | Goal | Frontend-Specific Tasks |
 | :---- | :---- | :---- |
 | **1** | **Foundation & Setup** | Initialize the React project using Vite and pnpm. Set up TypeScript, ESLint, Prettier, and Husky. Create the basic project structure (folders for components, features, services). Set up the Vercel project and confirm initial "Hello World" deployment. |
-| **2** | **Authentication** | Build the UI for the login and sign-up pages. Create the React components for input forms. Implement the frontend logic to call the Supabase authentication endpoints via our backend. Set up protected routes and manage the user's session state globally. |
+| **2** | **Authentication** | Build the UI for the login and sign-up pages. Create the React components for input forms. Implement the frontend logic to call Supabase authentication directly using the supabase-js client. Set up protected routes and manage the user's session state globally. Configure JWT token management for backend API calls. |
 | **3** | **Plan Creation** | Build the UI for creating, viewing, and editing workout plans. Develop components for browsing the exercise list, adding exercises to a plan, and saving the plan. Implement the API calls to the backend to persist this data. |
 | **4** | **Workout Logging** | Design and build the "Active Workout" screen. This is the most critical interactive component. It needs to be fast and easy to use. Implement the UI for logging sets, reps, and weight. Implement the initial offline storage logic using IndexedDB. |
 | **5** | **Exercise Library** | Build the UI screen for browsing and searching the exercise library. Create components to display exercise details (instructions, muscle groups). |
