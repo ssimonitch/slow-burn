@@ -8,9 +8,9 @@ This document tracks blockers encountered during development, their impact, and 
 
 #### 1. Backend API Availability
 - **Type:** External Dependency
-- **Impact:** High - Cannot test auth flow without API
-- **Mitigation:** Mock service implementation ready
-- **Status:** Monitoring
+- **Impact:** Medium - Only blocks Task 9 full testing
+- **Mitigation:** Frontend auth works independently via Supabase
+- **Status:** Resolved - Not a blocker for Sprint 2
 - **Resolution Time:** N/A
 
 #### 2. Token Refresh Complexity
@@ -22,9 +22,9 @@ This document tracks blockers encountered during development, their impact, and 
 
 #### 3. Supabase Configuration
 - **Type:** External Dependency
-- **Impact:** High - Authentication won't work
-- **Mitigation:** Early coordination with backend team
-- **Status:** Monitoring
+- **Impact:** High - Blocks Task 1 and all dependent tasks
+- **Mitigation:** Environment variables documented in .env.example
+- **Status:** Active Blocker - Need credentials
 - **Resolution Time:** N/A
 
 ## Blocker Template
@@ -106,8 +106,8 @@ This document tracks blockers encountered during development, their impact, and 
 ### Sprint 2 (Current)
 - **Identified Risks:** 3
 - **Preemptive Mitigations:** 3
-- **Active Blockers:** 0
+- **Active Blockers:** 1 (Supabase credentials needed)
 
 ---
 
-*Last Updated: 2025-01-27*
+*Last Updated: 2025-02-01*

@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
+    // Exclude integration tests from regular test runs
+    exclude: ['node_modules', 'src/**/*.integration.test.{ts,tsx}'],
   },
   resolve: {
     alias: {

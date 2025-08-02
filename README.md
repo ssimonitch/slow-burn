@@ -1,54 +1,133 @@
-# React + TypeScript + Vite
+# Slow Burn Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript frontend for the Slow Burn AI Fitness Companion - a Progressive Web App (PWA) that helps users track workouts while building a relationship with an AI companion.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Install dependencies
+pnpm install
 
-## Expanding the ESLint configuration
+# Start development server
+pnpm dev
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
+# Run tests
+pnpm test
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development Commands
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
+```bash
+pnpm dev          # Start dev server (port 5173)
+pnpm build        # Build for production
+pnpm preview      # Preview production build
+pnpm lint         # Run ESLint
+pnpm typecheck    # Check TypeScript types
+pnpm test         # Run unit tests
+pnpm test:watch   # Run tests in watch mode
+pnpm test:integration  # Run integration tests (requires local Supabase)
+pnpm test:all     # Run all tests
 ```
+
+## Tech Stack
+
+- **Framework**: React 19+ with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: Zustand
+- **Authentication**: Supabase (client-side)
+- **Testing**: Vitest + React Testing Library
+- **PWA**: Vite PWA Plugin
+
+## Project Structure
+
+```
+src/
+├── components/     # Reusable UI components
+├── features/       # Feature-based modules
+├── services/       # API clients and services
+├── pages/         # Route-level components
+├── hooks/         # Custom React hooks
+├── lib/           # Utilities and helpers
+├── stores/        # Zustand state stores
+└── types/         # TypeScript type definitions
+```
+
+## Testing
+
+We use a hybrid testing approach:
+
+- **Unit Tests** (`.unit.test.ts`): Test business logic with mocked dependencies
+- **Integration Tests** (`.integration.test.ts`): Test against real services
+
+See [Testing Strategy](./docs/testing-strategy.md) for detailed testing guidelines.
+
+### Running Tests
+
+```bash
+# Unit tests only
+pnpm test
+
+# Integration tests (requires local Supabase)
+pnpm test:integration
+
+# All tests
+pnpm test:all
+```
+
+## Environment Setup
+
+Create a `.env.local` file:
+
+```env
+# Supabase Configuration
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Backend API (optional)
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+## Local Development with Supabase
+
+For integration testing and local development:
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Start local Supabase
+supabase start
+
+# Stop when done
+supabase stop
+```
+
+## Code Quality
+
+- **ESLint**: Configured with strict TypeScript rules
+- **Prettier**: Auto-formatting on save
+- **Husky**: Pre-commit hooks for linting
+- **TypeScript**: Strict mode enabled
+
+## Architecture Decisions
+
+- **Frontend-Direct Auth**: Authentication handled directly with Supabase client SDK
+- **Feature-Based Organization**: Code organized by features rather than file types
+- **Type Safety**: Comprehensive TypeScript usage with Zod runtime validation
+- **Error Handling**: Centralized error reporting system ready for Sentry integration
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Ensure tests pass: `pnpm test:all`
+4. Ensure linting passes: `pnpm lint`
+5. Submit a pull request
+
+## Resources
+
+- [Project Documentation](./docs/)
+- [Backend Integration Guide](./docs/01_backend_integration_context.md)
+- [Testing Strategy](./docs/testing-strategy.md)
+- [Sprint Planning](./docs/planning/)

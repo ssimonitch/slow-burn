@@ -1,170 +1,87 @@
 # Dependencies Map - Slow Burn Frontend
 
-## Critical Path Analysis
-
-```mermaid
-graph TD
-    A[Sprint 1: Foundation] --> B[Sprint 2: Authentication]
-    B --> C[Sprint 3: Plan Creation]
-    B --> D[Sprint 5: Exercise Library]
-    C --> E[Sprint 4: Workout Logging]
-    D --> E
-    E --> F[Sprint 6: AI Chat]
-    F --> G[Sprint 7: Affinity & Polish]
-    G --> H[Sprint 8: PWA & Testing]
-    
-    style A fill:#90EE90
-    style B fill:#FFD700
-    style C fill:#87CEEB
-    style D fill:#87CEEB
-    style E fill:#FF6B6B
-    style F fill:#DDA0DD
-    style G fill:#F0E68C
-    style H fill:#FF69B4
-```
+This document tracks dependencies between tasks, sprints, and external systems to ensure smooth development flow.
 
 ## Sprint 2: Authentication Dependencies
 
-### Upstream Dependencies (Must be completed first)
-1. **Project Setup (Sprint 1)** ✅
-   - React + TypeScript environment
-   - Routing infrastructure
-   - Component library (shadcn/ui)
-   - State management setup
+### External Dependencies
+| Dependency | Required By | Status | Notes |
+|------------|-------------|--------|-------|
+| Supabase Project Setup | Task 1 | 🔴 Not Configured | Need VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY |
+| Backend API Running | Task 9 | 🟡 Optional for Sprint 2 | Can develop auth UI without backend initially |
+| Backend JWT Validation | Task 9 | 🟡 Optional for Sprint 2 | Backend validates JWTs but frontend can work independently |
 
-2. **Backend API Endpoints**
-   - `/api/auth/signup` - User registration
-   - `/api/auth/login` - User authentication
-   - `/api/auth/logout` - Session termination
-   - `/api/auth/refresh` - Token refresh
-   - `/api/auth/user` - Current user info
-
-3. **Supabase Configuration**
-   - Auth schema in database
-   - JWT secret configuration
-   - Email templates (handled by backend)
-
-### Downstream Dependencies (Blocked by Authentication)
-1. **All User-Specific Features**
-   - Workout plan creation (Sprint 3)
-   - Workout logging (Sprint 4)
-   - Progress tracking
-   - AI chat personalization (Sprint 6)
-
-2. **Data Persistence**
-   - User preferences
-   - Workout history
-   - Custom exercises
-   - Affinity scores
-
-## Technical Dependency Graph
-
-### Component Dependencies
+### Internal Task Dependencies
 ```
-App.tsx
-├── Router
-│   ├── PublicRoutes
-│   │   ├── LoginPage → LoginForm → AuthService
-│   │   ├── SignupPage → SignupForm → AuthService
-│   │   └── ForgotPasswordPage → ForgotPasswordForm → AuthService
-│   └── ProtectedRoutes → AuthStore
-│       ├── DashboardPage
-│       ├── WorkoutPages
-│       └── ProfilePages
-├── AuthProvider → AuthStore
-└── ThemeProvider
+Task 1: Supabase Client Setup
+└── Task 2: Auth Store Implementation
+    ├── Task 3: Login Component
+    ├── Task 4: Sign-up Component
+    └── Task 7: Password Reset Flow
+        
+Task 5: Auth Layout
+└── Task 8: Auth Pages & Routing
+    └── Task 6: Protected Routes
+
+Task 9: API Client Configuration (can be done in parallel)
+└── Task 10: User Feedback Components
+
+Task 11: Auth Tests (depends on all components)
 ```
 
-### Service Layer Dependencies
-```
-AuthService
-├── API Client (axios instance)
-├── Token Manager
-│   ├── localStorage (persistence)
-│   └── Token Refresh Logic
-└── Error Handler
+### Cross-Sprint Dependencies
+- **Sprint 3 (Plan Creation)** → Requires completed authentication
+- **Sprint 4 (Workout Logging)** → Requires auth + plan creation
+- **Sprint 6 (AI Chat)** → Requires auth for user context
 
-AuthStore (Zustand)
-├── AuthService
-├── User State
-├── Session State
-└── Persistence Middleware
-```
+## Configuration Requirements
 
-## Risk Mitigation Strategies
+### Sprint 2 Start Requirements
+1. **Supabase Credentials**
+   - `VITE_SUPABASE_URL` - The Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY` - The public anon key for client-side usage
+   
+2. **Backend API (Optional for UI Development)**
+   - `VITE_BACKEND_URL` - Backend API URL (default: http://localhost:8000)
+   - Backend should be running for Task 9 testing
 
-### 1. Backend API Not Ready
-**Mitigation:** Implement mock service layer
-```typescript
-interface AuthService {
-  login(credentials: LoginCredentials): Promise<AuthResponse>;
-  signup(data: SignupData): Promise<AuthResponse>;
-  // ... other methods
-}
+### Environment Setup Checklist
+- [ ] Copy `.env.example` to `.env.local`
+- [ ] Add Supabase project URL
+- [ ] Add Supabase anon key
+- [ ] Configure backend URL (if different from default)
+- [ ] Verify Supabase has email auth enabled
 
-// Can swap between MockAuthService and RealAuthService
-const authService: AuthService = process.env.USE_MOCK 
-  ? new MockAuthService() 
-  : new RealAuthService();
-```
+## Blocking Risks
 
-### 2. Token Management Complexity
-**Mitigation:** Progressive enhancement approach
-1. **Phase 1:** Basic token storage and manual refresh
-2. **Phase 2:** Automatic refresh on 401 responses
-3. **Phase 3:** Proactive refresh before expiration
+### High Priority Blockers
+1. **Missing Supabase Credentials**
+   - Blocks: Task 1, and consequently all auth tasks
+   - Resolution: Obtain from backend team or create new Supabase project
 
-### 3. Route Protection Edge Cases
-**Mitigation:** Comprehensive testing matrix
-- User logs in → can access protected routes ✓
-- User logs out → redirected to login ✓
-- Token expires → automatic refresh attempted ✓
-- Refresh fails → redirected to login ✓
-- Direct URL access → proper redirect ✓
+### Medium Priority Blockers
+1. **Backend API Unavailable**
+   - Blocks: Task 9 full testing
+   - Resolution: Can develop with mocked responses initially
 
-## Integration Points
+## Task Sequencing Strategy
 
-### With Backend (FastAPI)
-- **Authentication Flow:** REST API over HTTPS
-- **Token Format:** JWT with refresh token
-- **Error Codes:** Standardized HTTP status codes
-- **CORS:** Configured for Vercel deployment
+### Recommended Order
+1. **Get Supabase Credentials** (Pre-sprint)
+2. **Task 1 & 5** (Parallel) - Foundation work
+3. **Task 2** - Core state management
+4. **Tasks 3, 4, 8** (Parallel) - UI components
+5. **Task 6** - Route protection
+6. **Task 7** - Password reset
+7. **Task 9** - Backend integration
+8. **Task 10** - Polish
+9. **Task 11** - Testing
 
-### With Supabase
-- **Through Backend:** Frontend never directly touches Supabase
-- **User Data:** Stored in Supabase, accessed via backend
-- **Real-time:** Not used in MVP (future enhancement)
+### Critical Path
+Task 1 → Task 2 → Task 3/4 → Task 6
 
-### With PWA Features
-- **Offline Handling:** Auth state persisted locally
-- **Service Worker:** Excludes auth endpoints from cache
-- **Background Sync:** Queued auth requests when offline
-
-## Testing Dependencies
-
-### Unit Testing Requirements
-- Mock auth service for component tests
-- Mock Zustand store for hook tests
-- Mock router for navigation tests
-
-### Integration Testing Requirements
-- Test database with known users
-- Backend API running locally
-- Network condition simulation
-
-## Performance Considerations
-
-### Bundle Size Impact
-- Zod: ~15KB (for validation)
-- Axios: ~20KB (for API calls)
-- Zustand: ~10KB (for state management)
-- **Total Auth Bundle:** ~45KB + components
-
-### Load Time Optimization
-1. Lazy load auth components
-2. Preload critical auth routes
-3. Cache auth assets in service worker
+This path represents the minimum viable authentication flow.
 
 ---
 
-*Last Updated: 2025-01-27*
+*Last Updated: 2025-02-01*

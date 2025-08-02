@@ -1,6 +1,6 @@
-import React from 'react';
+import type { FunctionComponent } from 'react';
 
-export const Home: React.FC = () => {
+export const Home: FunctionComponent = () => {
   return (
     <div>
       <h1>Welcome Home!</h1>

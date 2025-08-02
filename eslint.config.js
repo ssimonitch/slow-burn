@@ -12,7 +12,7 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslintPluginVitest from '@vitest/eslint-plugin';
 
 export default tseslint.config(
-  { ignores: ['dist', 'vitest.config.ts'] },
+  { ignores: ['dist', 'vitest.config.ts', 'vitest.config.integration.ts', 'src/types/**.types.gen.ts'] },
   {
     extends: [
       eslintJs.configs.recommended,
@@ -61,11 +61,7 @@ export default tseslint.config(
   },
   // Allow console statements in error and performance monitoring services
   {
-    files: [
-      'src/shared/services/error-monitor.service.ts',
-      'src/test/pose-detection/performance/performance-examples.ts',
-      'src/test/pose-detection/performance/benchmark.test.ts',
-    ],
+    files: ['src/lib/errors.ts'],
     rules: {
       'no-console': 'off',
     },
@@ -78,6 +74,7 @@ export default tseslint.config(
     rules: {
       ...eslintPluginVitest.configs.recommended.rules,
       '@typescript-eslint/unbound-method': 'off',
+      'no-console': 'off',
     },
   },
   eslintPluginPrettierRecommended,

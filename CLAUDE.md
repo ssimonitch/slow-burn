@@ -63,3 +63,7 @@ This is a React + TypeScript + Vite frontend for the Slow Burn AI Fitness Compan
 
 ### Pre-commit Hooks
 Husky is configured to run linting before commits. Ensure code passes `pnpm lint` and `pnpm typecheck` before committing.
+
+## Development Guidance
+- Always reference the project brief in @docs/00_project_brief.md for more context about the project
+- When integrating with the backend reference @docs/01_backend_integration_context.md
