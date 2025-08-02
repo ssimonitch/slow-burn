@@ -11,10 +11,10 @@
  * with real Supabase authentication, see auth.service.integration.test.ts
  */
 
-import type { AuthError as SupabaseAuthError, Session, User } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { supabase } from '@/lib/supabase';
+import { createMockSession, createMockSupabaseError, createMockUser } from '@/test/factories/auth';
 
 import { AuthErrorCode, authService } from './auth.service';
 
@@ -35,39 +35,6 @@ vi.mock('@/lib/supabase', () => ({
   },
   onAuthStateChange: vi.fn(),
 }));
-
-// Test helper functions for creating properly typed mock objects
-function createMockUser(overrides: Partial<User> = {}): User {
-  return {
-    id: '123',
-    app_metadata: {},
-    user_metadata: {},
-    aud: 'authenticated',
-    created_at: '2024-01-01T00:00:00Z',
-    email: 'test@example.com',
-    ...overrides,
-  };
-}
-
-function createMockSession(overrides: Partial<Session> = {}): Session {
-  const mockUser = createMockUser();
-  return {
-    access_token: 'token123',
-    refresh_token: 'refresh123',
-    expires_in: 3600,
-    token_type: 'bearer',
-    user: mockUser,
-    ...overrides,
-  };
-}
-
-function createMockSupabaseError(overrides: Partial<SupabaseAuthError> = {}): SupabaseAuthError {
-  return {
-    message: 'Invalid login credentials',
-    name: 'AuthApiError',
-    ...overrides,
-  } as SupabaseAuthError;
-}
 
 describe('AuthService Unit Tests', () => {
   beforeEach(() => {
@@ -158,7 +125,9 @@ describe('AuthService Unit Tests', () => {
     });
 
     it('should map Supabase auth errors to custom error codes', async () => {
-      const mockError = createMockSupabaseError();
+      const mockError = createMockSupabaseError({
+        message: 'Invalid login credentials',
+      });
 
       vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
         data: { user: null, session: null },
@@ -199,7 +168,7 @@ describe('AuthService Unit Tests', () => {
 
       const token = await authService.getAccessToken();
 
-      expect(token).toBe('token123');
+      expect(token).toBe('test-access-token');
     });
 
     it('should return null when no session', async () => {
