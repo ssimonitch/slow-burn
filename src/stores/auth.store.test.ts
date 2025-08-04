@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthError, AuthErrorCode, authService } from '@/services/auth.service';
 import { createMockSession, createMockUser } from '@/test/factories/auth';
 
-import { useAuthStore } from './auth.store';
+import { _resetAuthStateForTesting, useAuthStore } from './auth.store';
 
 // Mock the auth service
 vi.mock('@/services/auth.service', () => ({
@@ -39,6 +39,9 @@ describe('Auth Store', () => {
   const mockSession = createMockSession();
 
   beforeEach(() => {
+    // Reset module-level auth state
+    _resetAuthStateForTesting();
+
     // Reset store state
     useAuthStore.setState({
       user: null,
@@ -52,7 +55,6 @@ describe('Auth Store', () => {
       },
       error: null,
       initialized: false,
-      _unsubscribe: null,
     });
 
     // Clear all mocks
@@ -366,17 +368,13 @@ describe('Auth Store', () => {
         await result.current.initialize();
       });
 
-      // Verify unsubscribe function was stored
-      expect(result.current._unsubscribe).toBe(mockUnsubscribe);
-
       // Call cleanup
       act(() => {
         result.current.cleanup();
       });
 
-      // Verify unsubscribe was called and cleared
+      // Verify unsubscribe was called
       expect(mockUnsubscribe).toHaveBeenCalled();
-      expect(result.current._unsubscribe).toBeNull();
     });
 
     it('should handle cleanup when no listener exists', () => {
@@ -387,8 +385,8 @@ describe('Auth Store', () => {
         result.current.cleanup();
       });
 
-      // Should not throw and state should remain null
-      expect(result.current._unsubscribe).toBeNull();
+      // Should not throw - cleanup should be safe to call multiple times
+      expect(() => result.current.cleanup()).not.toThrow();
     });
 
     it('should not call unsubscribe multiple times', async () => {

@@ -12,6 +12,8 @@
 
 import type { AuthError as SupabaseAuthError, Session, User } from '@supabase/supabase-js';
 
+import type { AuthError, SignInCredentials, SignUpCredentials } from '@/services/auth.service';
+
 /**
  * Creates a mock Supabase User object with sensible defaults
  * @param overrides - Partial User object to override default values
@@ -59,4 +61,107 @@ export function createMockSupabaseError(overrides: Partial<SupabaseAuthError> = 
     name: overrides.name ?? 'AuthApiError',
     ...overrides,
   } as SupabaseAuthError;
+}
+
+/**
+ * Auth store state interface (must match the actual store)
+ */
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  isAuthenticated: boolean;
+  loading: {
+    init: boolean;
+    signIn: boolean;
+    signUp: boolean;
+    signOut: boolean;
+  };
+  error: AuthError | null;
+  initialized: boolean;
+}
+
+/**
+ * Auth store actions interface (must match the actual store)
+ */
+interface AuthActions {
+  initialize: () => Promise<void>;
+  signIn: (credentials: SignInCredentials) => Promise<void>;
+  signUp: (credentials: SignUpCredentials) => Promise<void>;
+  signOut: () => Promise<void>;
+  clearError: () => void;
+  cleanup: () => void;
+  _setSession: (session: Session | null) => void;
+  _setUser: (user: User | null) => void;
+  _setError: (error: AuthError | null) => void;
+  _setLoading: (operation: keyof AuthState['loading'], isLoading: boolean) => void;
+}
+
+/**
+ * Combined auth store type
+ */
+export type AuthStore = AuthState & AuthActions;
+
+/**
+ * Creates a mock AuthState object with sensible defaults
+ * @param overrides - Partial AuthState object to override default values
+ * @returns Fully typed AuthState object
+ */
+export function createMockAuthState(overrides: Partial<AuthState> = {}): AuthState {
+  return {
+    user: overrides.user ?? null,
+    session: overrides.session ?? null,
+    isAuthenticated: overrides.isAuthenticated ?? false,
+    loading: overrides.loading ?? {
+      init: false,
+      signIn: false,
+      signUp: false,
+      signOut: false,
+    },
+    error: overrides.error ?? null,
+    initialized: overrides.initialized ?? true,
+  };
+}
+
+/**
+ * Creates a complete mock AuthStore with both state and actions
+ * @param stateOverrides - Partial AuthState to override default state values
+ * @param actionOverrides - Partial AuthActions to override default actions
+ * @returns Fully typed AuthStore object
+ */
+export function createMockAuthStore(
+  stateOverrides: Partial<AuthState> = {},
+  actionOverrides: Partial<AuthActions> = {},
+): AuthStore {
+  const mockState = createMockAuthState(stateOverrides);
+
+  const defaultActions: AuthActions = {
+    initialize: async () => {},
+    signIn: async () => {},
+    signUp: async () => {},
+    signOut: async () => {},
+    clearError: () => {},
+    cleanup: () => {},
+    _setSession: () => {},
+    _setUser: () => {},
+    _setError: () => {},
+    _setLoading: () => {},
+  };
+
+  return {
+    ...mockState,
+    ...defaultActions,
+    ...actionOverrides,
+  };
+}
+
+/**
+ * Creates a partial auth store for use with selector-based testing
+ * This is useful when testing components that use selectors to access only
+ * specific parts of the store.
+ *
+ * @param overrides - Any partial store properties to include
+ * @returns Partial AuthStore that satisfies selector requirements
+ */
+export function createPartialAuthStore(overrides: Partial<AuthStore> = {}): AuthStore {
+  return createMockAuthStore({}, overrides);
 }

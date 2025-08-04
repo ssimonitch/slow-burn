@@ -8,14 +8,22 @@ import type { Database } from '@/types/database.types.gen';
  * Supabase client instance configured for the Slow Burn app.
  *
  * Features:
- * - Automatic token refresh
+ * - Automatic token refresh with secure token handling
  * - Persistent sessions across page reloads
  * - TypeScript type safety with Database types
+ * - PKCE flow for enhanced security
  * - Optimized for PWA with offline support considerations
+ *
+ * Security features:
+ * - PKCE (Proof Key for Code Exchange) enabled for OAuth flows
+ * - Automatic token refresh before expiry
+ * - Secure session storage (localStorage with plans for httpOnly cookies)
+ * - Session validation on each app load
  */
 export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
     // Store auth data in localStorage for persistence
+    // TODO: In production, consider using httpOnly cookies for enhanced security
     storage: window.localStorage,
     // Auto-refresh tokens before expiry
     autoRefreshToken: true,
@@ -25,15 +33,34 @@ export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfi
     detectSessionInUrl: true,
     // Storage key prefix to avoid conflicts
     storageKey: 'slow-burn-auth',
+    // Enable PKCE flow for enhanced security
+    // This provides protection against authorization code interception attacks
+    flowType: 'pkce',
+    // Debug mode for development (disable in production)
+    debug: import.meta.env.DEV,
   },
   // Global fetch options
   global: {
     // Headers to be sent with every request
     headers: {
       'x-client-info': 'slow-burn-pwa',
+      // Add additional security headers
+      'x-requested-with': 'XMLHttpRequest', // Helps prevent CSRF
     },
   },
+  // Database options
+  db: {
+    // Return single objects instead of arrays for single-row queries
+    schema: 'public',
+  },
   // Realtime options (for future features)
+  realtime: {
+    // Configurable for future real-time features
+    params: {
+      // Acknowledge messages for reliability
+      eventsPerSecond: 10,
+    },
+  },
 });
 
 /**

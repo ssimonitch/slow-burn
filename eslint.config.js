@@ -54,9 +54,10 @@ export default tseslint.config(
   // These are foundational components that export utilities alongside components,
   // which is a common pattern in UI libraries (shadcn/ui, Radix UI)
   {
-    files: ['src/shared/**/*.{ts,tsx}'],
+    files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {
       'react-refresh/only-export-components': 'off',
+      'react-x/no-unstable-context-value': 'off',
     },
   },
   // Allow console statements in error and performance monitoring services
@@ -74,6 +75,10 @@ export default tseslint.config(
     rules: {
       ...eslintPluginVitest.configs.recommended.rules,
       '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
       'no-console': 'off',
     },
   },

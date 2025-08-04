@@ -11,6 +11,25 @@ import {
 } from '@/services/auth.service';
 
 /**
+ * Module-level variable to store the auth state change listener unsubscribe function.
+ * This is kept outside of the store state to avoid storing non-serializable values
+ * in state and to prevent unnecessary re-renders.
+ */
+let authStateChangeUnsubscribe: (() => void) | null = null;
+
+/**
+ * Reset function for testing purposes only.
+ * This allows tests to reset the module-level state between test runs.
+ * @internal
+ */
+export const _resetAuthStateForTesting = () => {
+  if (authStateChangeUnsubscribe) {
+    authStateChangeUnsubscribe();
+    authStateChangeUnsubscribe = null;
+  }
+};
+
+/**
  * Auth store state interface
  */
 interface AuthState {
@@ -32,9 +51,6 @@ interface AuthState {
 
   // Track if the store has been initialized
   initialized: boolean;
-
-  // Store the unsubscribe function for auth state listener cleanup
-  _unsubscribe: (() => void) | null;
 }
 
 /**
@@ -82,7 +98,6 @@ const getInitialState = (): AuthState => ({
   },
   error: null,
   initialized: false,
-  _unsubscribe: null,
 });
 
 /**
@@ -106,7 +121,7 @@ export const useAuthStore = create<AuthStore>()(
         const state = get();
 
         // Prevent multiple initializations
-        if (state.initialized || state.loading.init) {
+        if (state.initialized || state.loading.init || authStateChangeUnsubscribe) {
           return;
         }
 
@@ -125,7 +140,8 @@ export const useAuthStore = create<AuthStore>()(
           });
 
           // Subscribe to auth state changes
-          const unsubscribe = authService.onAuthStateChange((event, session) => {
+          // Store the unsubscribe function in the module-level variable
+          authStateChangeUnsubscribe = authService.onAuthStateChange((event, session) => {
             switch (event) {
               case 'SIGNED_IN':
               case 'TOKEN_REFRESHED':
@@ -161,10 +177,6 @@ export const useAuthStore = create<AuthStore>()(
                 break;
             }
           });
-
-          // Store the unsubscribe function in the store's state for cleanup
-          // This allows components or the app to clean up the listener when needed
-          set({ _unsubscribe: unsubscribe });
         } catch (error) {
           set({
             initialized: true,
@@ -269,10 +281,9 @@ export const useAuthStore = create<AuthStore>()(
 
       // Cleanup auth listeners
       cleanup: () => {
-        const state = get();
-        if (state._unsubscribe) {
-          state._unsubscribe();
-          set({ _unsubscribe: null });
+        if (authStateChangeUnsubscribe) {
+          authStateChangeUnsubscribe();
+          authStateChangeUnsubscribe = null;
         }
       },
 

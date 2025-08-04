@@ -8,6 +8,7 @@ export const ErrorCategory = {
   NETWORK: 'NETWORK',
   VALIDATION: 'VALIDATION',
   PWA: 'PWA',
+  SECURITY: 'SECURITY',
   STORAGE: 'STORAGE',
   UNKNOWN: 'UNKNOWN',
 } as const;
@@ -18,6 +19,8 @@ export type ErrorCategoryType = (typeof ErrorCategory)[keyof typeof ErrorCategor
  * Error severity levels for prioritization
  */
 export const ErrorSeverity = {
+  INFO: 'INFO',
+  WARN: 'WARN',
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
@@ -190,6 +193,30 @@ class ErrorReportingSystem {
     const error = new AppError(message, category, severity, originalError, context);
     this.report(error);
     return error;
+  }
+
+  /**
+   * Create and report an info message
+   */
+  reportInfo(
+    message: string,
+    category: ErrorCategoryType = ErrorCategory.UNKNOWN,
+    originalError?: unknown,
+    context?: Record<string, unknown>,
+  ): void {
+    this.reportError(message, category, ErrorSeverity.INFO, originalError, context);
+  }
+
+  /**
+   * Create and report a warning message
+   */
+  reportWarning(
+    message: string,
+    category: ErrorCategoryType = ErrorCategory.UNKNOWN,
+    originalError?: unknown,
+    context?: Record<string, unknown>,
+  ): void {
+    this.reportError(message, category, ErrorSeverity.WARN, originalError, context);
   }
 }
 

@@ -1,8 +1,47 @@
 import { useEffect } from 'react';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
+import { LoginPage, SignupPage } from '@/pages/auth';
+import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
 import { useAuthInit } from '@/stores';
+
+// Create the router configuration
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Home />,
+  },
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/signup',
+    element: <SignupPage />,
+  },
+  {
+    // Protected routes
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '/dashboard',
+        element: <Dashboard />,
+      },
+      // Future protected routes will be added here:
+      // { path: '/workouts', element: <WorkoutsPage /> },
+      // { path: '/plans', element: <PlansPage /> },
+      // { path: '/profile', element: <ProfilePage /> },
+    ],
+  },
+  {
+    // Catch-all redirect to home
+    path: '*',
+    element: <Navigate to="/" replace />,
+  },
+]);
 
 function App() {
   // Initialize auth store on app mount
@@ -19,14 +58,18 @@ function App() {
   if (!authInitialized) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-center">
+          <div className="border-primary mb-4 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" />
+          <h2 className="text-lg font-semibold">Slow Burn</h2>
+          <p className="text-muted-foreground text-sm">Loading your fitness journey...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-      <Home />
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }

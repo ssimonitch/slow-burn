@@ -207,6 +207,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSignInClick
                         <div className="flex flex-1 gap-1">
                           {Array.from({ length: 4 }).map((_, i) => (
                             <div
+                              // eslint-disable-next-line react-x/no-array-index-key
                               key={i}
                               className={`h-1 flex-1 rounded-full transition-colors ${
                                 i < passwordStrength ? passwordStrengthInfo.color : 'bg-muted'
@@ -220,8 +221,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSignInClick
                       {/* Password requirements checklist */}
                       {showPasswordRequirements && (
                         <div className="bg-muted/30 space-y-1 rounded-md border p-2">
-                          {passwordRequirements.map((req, index) => (
-                            <div key={index} className="flex items-center gap-2 text-xs">
+                          {passwordRequirements.map((req) => (
+                            <div key={req.label} className="flex items-center gap-2 text-xs">
                               {req.test(password) ? (
                                 <Check className="h-3 w-3 text-green-500" />
                               ) : (

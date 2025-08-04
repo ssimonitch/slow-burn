@@ -1,19 +1,47 @@
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
 import { AuthLayout, SignupForm } from '@/features/auth';
+import { safeDecodeUrl } from '@/lib/security';
+import { useIsAuthenticated } from '@/stores/auth.store';
 
 /**
  * Sign-up page that combines the AuthLayout with the SignupForm
- * Note: Navigation handlers will be implemented when react-router-dom is added (Task 8)
+ * Handles registration flow and redirects after successful signup
+ *
+ * Security features:
+ * - Validates and sanitizes redirect URLs to prevent open redirect attacks
+ * - Safely decodes URL parameters to prevent XSS attacks
+ * - Preserves safe redirect destinations across auth flows
  */
 export const SignupPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAuthenticated = useIsAuthenticated();
+
+  // Securely get redirect destination from URL params
+  // This prevents open redirect and XSS attacks by validating the URL
+  const from = searchParams.get('from');
+  const redirectTo = safeDecodeUrl(from, '/dashboard');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      // The redirectTo URL has already been validated and is safe
+      void navigate(redirectTo, { replace: true });
+    }
+  }, [isAuthenticated, redirectTo, navigate]);
+
   const handleSuccess = () => {
-    // Will navigate to the main app after successful signup
-    // Could also navigate to an email confirmation page
-    // TODO: Navigate to main app or email confirmation when routing is implemented
+    // Navigation will happen via useEffect when isAuthenticated changes
+    // Note: If email confirmation is required, user won't be authenticated immediately
   };
 
   const handleSignInClick = () => {
-    // Will navigate to login page
-    // TODO: Navigate to /login when routing is implemented
+    // Preserve the redirect destination when navigating to login
+    // Pass the encoded parameter as-is to maintain security validation
+    const loginUrl = from ? `/login?from=${from}` : '/login';
+    void navigate(loginUrl);
   };
 
   return (
