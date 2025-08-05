@@ -28,6 +28,8 @@ Our frontend stack is chosen for performance, developer experience, and a robust
 * **Styling:** **Tailwind CSS** (for utility-first styling)  
 * **Linting/Formatting:** **ESLint** and **Prettier**, managed with **Husky** pre-commit hooks.
 
+**Development Philosophy:** As a solo developer MVP project, we prioritize using mature, battle-tested libraries over building custom solutions. This approach maximizes development velocity and allows focus on the unique AI fitness companion features. Key decisions include using TanStack Query for server state management (instead of manual fetch handling) and Sonner for toast notifications (instead of custom implementations).
+
 ## **3\. High-Level Frontend Architecture**
 
 The application will be structured as a Single Page Application (SPA) and a Progressive Web App (PWA).

@@ -71,6 +71,25 @@ This is a React + TypeScript + Vite frontend for the Slow Burn AI Fitness Compan
 ### Pre-commit Hooks
 Husky is configured to run linting before commits. Ensure code passes `pnpm lint` and `pnpm typecheck` before committing.
 
+## Development Philosophy
+
+This is a solo developer MVP project with a focus on leveraging mature, battle-tested libraries to maximize development velocity and focus on building unique features.
+
+### Library Selection Principles
+- **Prefer Mature Solutions**: Use well-established libraries that solve common problems rather than building from scratch
+- **Developer Velocity**: Choose libraries that reduce boilerplate and accelerate development
+- **Type Safety**: All libraries must have excellent TypeScript support
+- **Active Maintenance**: Select libraries with active communities and regular updates
+
+### Core Library Choices
+- **TanStack Query**: Server state management instead of manual fetch handling
+- **Sonner**: Toast notifications instead of custom implementation
+- **React Hook Form + Zod**: Form handling and validation
+- **Framer Motion**: Animations for enhanced UX
+- **date-fns**: Date manipulation utilities
+
+This approach allows focusing development effort on the unique aspects of the AI fitness companion rather than solving already-solved problems.
+
 ## Security & Routing
 
 ### Security Utilities
