@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthLayout, LoginForm } from '@/features/auth';
+import { ErrorCategory, errorReporter, ErrorSeverity } from '@/lib/errors';
 import { safeDecodeUrl } from '@/lib/security';
 import { useIsAuthenticated } from '@/stores/auth.store';
 
@@ -27,8 +28,13 @@ export const LoginPage = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      // The redirectTo URL has already been validated and is safe
-      void navigate(redirectTo, { replace: true });
+      try {
+        // The redirectTo URL has already been validated and is safe
+        void navigate(redirectTo, { replace: true });
+      } catch (error) {
+        // Navigation failed, but component remains functional
+        errorReporter.reportError('Navigation failed', ErrorCategory.AUTH, ErrorSeverity.HIGH, error);
+      }
     }
   }, [isAuthenticated, redirectTo, navigate]);
 
@@ -37,25 +43,9 @@ export const LoginPage = () => {
     // This ensures consistent behavior with the auth state
   };
 
-  const handleSignUpClick = () => {
-    // Preserve the redirect destination when navigating to signup
-    // Pass the encoded parameter as-is to maintain security validation
-    const signupUrl = from ? `/signup?from=${from}` : '/signup';
-    void navigate(signupUrl);
-  };
-
-  const handleForgotPasswordClick = () => {
-    // Forgot password functionality coming soon
-    // TODO: Implement forgot password page and navigation
-  };
-
   return (
     <AuthLayout>
-      <LoginForm
-        onSuccess={handleSuccess}
-        onSignUpClick={handleSignUpClick}
-        onForgotPasswordClick={handleForgotPasswordClick}
-      />
+      <LoginForm onSuccess={handleSuccess} redirectUrl={from ?? undefined} />
     </AuthLayout>
   );
 };

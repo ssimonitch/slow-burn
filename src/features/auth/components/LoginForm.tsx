@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -23,15 +24,14 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
   onSuccess?: () => void;
-  onSignUpClick?: () => void;
-  onForgotPasswordClick?: () => void;
+  redirectUrl?: string;
 }
 
 /**
  * Login form component with validation and error handling
  * Integrates with the auth store for authentication
  */
-export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick, onForgotPasswordClick }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, redirectUrl }) => {
   const { signIn, loading, error: authError, clearError } = useAuthStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -163,24 +163,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignUpClick, 
         </Form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">
-        <button
-          type="button"
-          onClick={onForgotPasswordClick}
-          disabled={isLoading}
-          className="text-muted-foreground hover:text-primary text-sm transition-colors disabled:opacity-50"
+        <Link
+          to={redirectUrl ? `/forgot-password?from=${redirectUrl}` : '/forgot-password'}
+          className="text-muted-foreground hover:text-primary text-sm transition-colors"
+          tabIndex={isLoading ? -1 : 0}
+          aria-disabled={isLoading}
+          style={isLoading ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
         >
           Forgot your password?
-        </button>
+        </Link>
         <div className="text-muted-foreground text-sm">
           Don't have an account?{' '}
-          <button
-            type="button"
-            onClick={onSignUpClick}
-            disabled={isLoading}
-            className="text-primary font-medium hover:underline disabled:opacity-50"
+          <Link
+            to={redirectUrl ? `/signup?from=${redirectUrl}` : '/signup'}
+            className="text-primary font-medium hover:underline"
+            tabIndex={isLoading ? -1 : 0}
+            aria-disabled={isLoading}
+            style={isLoading ? { pointerEvents: 'none', opacity: 0.5 } : undefined}
           >
             Sign up
-          </button>
+          </Link>
         </div>
       </CardFooter>
     </Card>

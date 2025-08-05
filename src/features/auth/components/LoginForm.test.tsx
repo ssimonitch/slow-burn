@@ -11,13 +11,14 @@
  * Note: Uses existing test utilities from @/test/factories/auth.ts for consistent mocking
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthErrorCode } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { createMockSupabaseError } from '@/test/factories/auth';
+import { render } from '@/test/helpers/render';
 
 import { LoginForm } from './LoginForm';
 
@@ -162,28 +163,28 @@ describe('LoginForm', () => {
     expect(screen.getByText(/signing in/i)).toBeInTheDocument();
   });
 
-  it('calls onSignUpClick when sign up link is clicked', async () => {
-    const user = userEvent.setup();
-    const mockOnSignUpClick = vi.fn();
+  it('provides link to sign up page', () => {
+    render(<LoginForm />);
 
-    render(<LoginForm onSignUpClick={mockOnSignUpClick} />);
-
-    const signUpLink = screen.getByRole('button', { name: /sign up/i });
-    await user.click(signUpLink);
-
-    expect(mockOnSignUpClick).toHaveBeenCalled();
+    const signUpLink = screen.getByRole('link', { name: /sign up/i });
+    expect(signUpLink).toHaveAttribute('href', '/signup');
   });
 
-  it('calls onForgotPasswordClick when forgot password link is clicked', async () => {
-    const user = userEvent.setup();
-    const mockOnForgotPasswordClick = vi.fn();
+  it('provides link to forgot password page', () => {
+    render(<LoginForm />);
 
-    render(<LoginForm onForgotPasswordClick={mockOnForgotPasswordClick} />);
+    const forgotPasswordLink = screen.getByRole('link', { name: /forgot your password/i });
+    expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password');
+  });
 
-    const forgotPasswordLink = screen.getByText(/forgot your password/i);
-    await user.click(forgotPasswordLink);
+  it('preserves redirect URL in navigation links when provided', () => {
+    render(<LoginForm redirectUrl="/dashboard" />);
 
-    expect(mockOnForgotPasswordClick).toHaveBeenCalled();
+    const signUpLink = screen.getByRole('link', { name: /sign up/i });
+    expect(signUpLink).toHaveAttribute('href', '/signup?from=/dashboard');
+
+    const forgotPasswordLink = screen.getByRole('link', { name: /forgot your password/i });
+    expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password?from=/dashboard');
   });
 
   describe('accessibility', () => {
@@ -329,7 +330,7 @@ describe('LoginForm', () => {
       expect(mockSignIn).not.toHaveBeenCalled();
     });
 
-    it('disables navigation buttons during loading', () => {
+    it('disables navigation links during loading', () => {
       mockUseAuthStore.mockReturnValue({
         signIn: mockSignIn,
         clearError: mockClearError,
@@ -337,13 +338,10 @@ describe('LoginForm', () => {
         error: null,
       });
 
-      const mockOnSignUpClick = vi.fn();
-      const mockOnForgotPasswordClick = vi.fn();
+      render(<LoginForm />);
 
-      render(<LoginForm onSignUpClick={mockOnSignUpClick} onForgotPasswordClick={mockOnForgotPasswordClick} />);
-
-      expect(screen.getByText(/sign up/i)).toBeDisabled();
-      expect(screen.getByText(/forgot your password/i)).toBeDisabled();
+      expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('aria-disabled', 'true');
+      expect(screen.getByRole('link', { name: /forgot your password/i })).toHaveAttribute('aria-disabled', 'true');
     });
   });
 });
