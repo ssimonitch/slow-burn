@@ -1,11 +1,15 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { isDevelopment } from '@/config/env';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from '@/pages/auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
+import { queryClient } from '@/services/query/client';
 import { useAuthInit } from '@/stores';
 
 // Create the router configuration
@@ -76,9 +80,12 @@ function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-      <RouterProvider router={router} />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+        <RouterProvider router={router} />
+      </ThemeProvider>
+      {isDevelopment() && <ReactQueryDevtools initialIsOpen={false} />}
+    </QueryClientProvider>
   );
 }
 

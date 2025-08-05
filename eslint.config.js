@@ -10,9 +10,10 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import eslintPluginImport from 'eslint-plugin-import';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import eslintPluginVitest from '@vitest/eslint-plugin';
+import tanstackQuery from '@tanstack/eslint-plugin-query';
 
 export default tseslint.config(
-  { ignores: ['dist', 'vitest.config.ts', 'vitest.config.integration.ts', 'src/types/**.types.gen.ts'] },
+  { ignores: ['dist', 'vitest.config.ts', 'vitest.config.integration.ts', 'src/types/**.types.gen.ts', 'scripts/**'] },
   {
     extends: [
       eslintJs.configs.recommended,
@@ -22,6 +23,7 @@ export default tseslint.config(
       eslintReactDom.configs.recommended,
       eslintReactHooks.configs['recommended-latest'],
       erasableSyntaxOnly.configs.recommended,
+      ...tanstackQuery.configs['flat/recommended'],
     ],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

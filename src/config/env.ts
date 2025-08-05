@@ -24,8 +24,33 @@ const envSchema = z.object({
   // Application environment (optional, defaults to 'development')
   VITE_APP_ENV: z.enum(['development', 'staging', 'production']).optional().default('development'),
 
-  // API base URL (optional, for future backend integration)
-  VITE_API_BASE_URL: z.url('VITE_API_BASE_URL must be a valid URL').optional(),
+  // API base URL (optional, defaults to localhost:8000 in development)
+  VITE_API_BASE_URL: z
+    .url('VITE_API_BASE_URL must be a valid URL')
+    .optional()
+    .default('http://localhost:8000')
+    .refine(
+      (url) => {
+        // Requires HTTPS for production/staging environments
+        const env = z
+          .enum(['development', 'staging', 'production'])
+          .optional()
+          .default('development')
+          .parse(import.meta.env.VITE_APP_ENV);
+        const isProduction = env === 'production' || env === 'staging';
+        const isHttps = url.startsWith('https://');
+        const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1');
+
+        // In production/staging, require HTTPS unless it's localhost (for testing)
+        if (isProduction && !isHttps && !isLocalhost) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message: 'VITE_API_BASE_URL must use HTTPS in production/staging environments',
+      },
+    ),
 });
 
 /**
