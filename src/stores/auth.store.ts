@@ -8,7 +8,7 @@ import {
   authService,
   type SignInCredentials,
   type SignUpCredentials,
-} from '@/services/auth.service';
+} from '@/services/auth/auth.service';
 
 /**
  * Module-level variable to store the auth state change listener unsubscribe function.

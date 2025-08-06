@@ -12,7 +12,7 @@
 
 import type { AuthError as SupabaseAuthError, Session, User } from '@supabase/supabase-js';
 
-import type { AuthError, SignInCredentials, SignUpCredentials } from '@/services/auth.service';
+import type { AuthError, SignInCredentials, SignUpCredentials } from '@/services/auth/auth.service';
 
 /**
  * Creates a mock Supabase User object with sensible defaults

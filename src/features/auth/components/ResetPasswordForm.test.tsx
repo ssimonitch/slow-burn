@@ -18,8 +18,8 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AuthResponse } from '@/services/auth.service';
-import { AuthErrorCode, authService } from '@/services/auth.service';
+import type { AuthResponse } from '@/services/auth/auth.service';
+import { AuthErrorCode, authService } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { createMockAuthStore, createMockUser } from '@/test/factories/auth';
 import { render } from '@/test/helpers/render';
@@ -27,7 +27,7 @@ import { render } from '@/test/helpers/render';
 import { ResetPasswordForm } from './ResetPasswordForm';
 
 // Mock the auth service
-vi.mock('@/services/auth.service', () => ({
+vi.mock('@/services/auth/auth.service', () => ({
   AuthErrorCode: {
     SESSION_EXPIRED: 'SESSION_EXPIRED',
     NO_SESSION: 'NO_SESSION',

@@ -15,7 +15,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthErrorCode } from '@/services/auth.service';
+import { AuthErrorCode } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { createMockSupabaseError } from '@/test/factories/auth';
 import { render } from '@/test/helpers/render';

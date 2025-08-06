@@ -5,7 +5,7 @@
 import queryString from 'query-string';
 
 import { isDevelopment } from '@/config/env';
-import { authService } from '@/services/auth.service';
+import { authService } from '@/services/auth/auth.service';
 
 import { API_URL, CONTENT_TYPES, DEFAULT_TIMEOUT, HTTP_STATUS } from './config';
 import { ApiClientError, handleApiError } from './errors';

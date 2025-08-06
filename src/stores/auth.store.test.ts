@@ -3,13 +3,13 @@ import { act, renderHook } from '@testing-library/react';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthError, AuthErrorCode, authService } from '@/services/auth.service';
+import { AuthError, AuthErrorCode, authService } from '@/services/auth/auth.service';
 import { createMockSession, createMockUser } from '@/test/factories/auth';
 
 import { _resetAuthStateForTesting, useAuthStore } from './auth.store';
 
 // Mock the auth service
-vi.mock('@/services/auth.service', () => ({
+vi.mock('@/services/auth/auth.service', () => ({
   authService: {
     getSession: vi.fn(),
     getCurrentUser: vi.fn(),

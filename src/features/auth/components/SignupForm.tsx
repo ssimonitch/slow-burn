@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { AuthErrorCode, type SignUpCredentials } from '@/services/auth.service';
+import { AuthErrorCode, type SignUpCredentials } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 
 /**

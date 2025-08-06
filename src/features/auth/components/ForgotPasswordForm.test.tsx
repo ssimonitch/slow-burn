@@ -16,14 +16,14 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { AuthResponse } from '@/services/auth.service';
-import { AuthErrorCode, authService } from '@/services/auth.service';
+import type { AuthResponse } from '@/services/auth/auth.service';
+import { AuthErrorCode, authService } from '@/services/auth/auth.service';
 import { render } from '@/test/helpers/render';
 
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 // Mock the auth service
-vi.mock('@/services/auth.service', () => ({
+vi.mock('@/services/auth/auth.service', () => ({
   AuthErrorCode: {
     INVALID_EMAIL: 'INVALID_EMAIL',
     NETWORK_ERROR: 'NETWORK_ERROR',
