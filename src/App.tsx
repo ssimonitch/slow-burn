@@ -3,9 +3,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useEffect } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { isDevelopment } from '@/config/env';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
+import { setupGlobalErrorHandlers } from '@/lib/logger';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from '@/pages/auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
@@ -59,6 +61,11 @@ function App() {
   // Initialize auth store on app mount
   const { initialized: authInitialized, cleanup } = useAuthInit();
 
+  // Set up global error handlers on mount
+  useEffect(() => {
+    setupGlobalErrorHandlers();
+  }, []);
+
   // Cleanup auth listeners on unmount
   useEffect(() => {
     return () => {
@@ -80,12 +87,14 @@ function App() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-        <RouterProvider router={router} />
-      </ThemeProvider>
-      {isDevelopment() && <ReactQueryDevtools initialIsOpen={false} />}
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+          <RouterProvider router={router} />
+        </ThemeProvider>
+        {isDevelopment() && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

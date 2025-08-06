@@ -157,7 +157,9 @@ async function processResponse<T>(response: Response, endpoint: string): Promise
       apiResponse.error?.message ?? response.statusText,
       response.status,
       endpoint,
-      apiResponse.error,
+      apiResponse.error?.code,
+      apiResponse.error?.field,
+      apiResponse.error?.detail,
     );
   }
 

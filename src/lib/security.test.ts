@@ -13,7 +13,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AppError, errorReporter } from '@/lib/errors';
+import * as logger from '@/lib/logger';
 
 import {
   generateCSPNonce,
@@ -53,7 +53,7 @@ describe('Security Utilities', () => {
 
     describe('invalid and malicious URLs', () => {
       beforeEach(() => {
-        vi.spyOn(errorReporter, 'reportWarning').mockImplementation(() => {});
+        vi.spyOn(logger, 'logWarn').mockImplementation(() => {});
       });
 
       afterEach(() => {
@@ -78,9 +78,9 @@ describe('Security Utilities', () => {
         ['   ', 'whitespace only'],
       ])('should reject %s (%s)', (input) => {
         expect(validateReturnUrl(input)).toBe('/dashboard');
-        // Check errorReporter.reportWarning was called for non-empty inputs
+        // Check logger.logWarn was called for non-empty inputs
         if (typeof input === 'string' && input.trim()) {
-          expect(errorReporter.reportWarning).toHaveBeenCalled();
+          expect(logger.logWarn).toHaveBeenCalled();
         }
       });
 
@@ -133,7 +133,7 @@ describe('Security Utilities', () => {
 
   describe('safeDecodeUrl', () => {
     beforeEach(() => {
-      vi.spyOn(errorReporter, 'reportWarning').mockImplementation(() => {});
+      vi.spyOn(logger, 'logWarn').mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -156,7 +156,7 @@ describe('Security Utilities', () => {
       expect(safeDecodeUrl('%')).toBe('/dashboard');
       expect(safeDecodeUrl('%%')).toBe('/dashboard');
       expect(safeDecodeUrl('%GG')).toBe('/dashboard');
-      expect(errorReporter.reportWarning).toHaveBeenCalled();
+      expect(logger.logWarn).toHaveBeenCalled();
     });
 
     it('should handle null input', () => {
@@ -346,12 +346,10 @@ describe('Security Utilities', () => {
     beforeEach(() => {
       replaceMock = vi.fn();
 
-      // Mock errorReporter methods
-      vi.spyOn(errorReporter, 'reportError').mockImplementation(() => {
-        return new AppError('test');
-      });
-      vi.spyOn(errorReporter, 'reportWarning').mockImplementation(() => {});
-      vi.spyOn(errorReporter, 'reportInfo').mockImplementation(() => {});
+      // Mock logger methods
+      vi.spyOn(logger, 'logError').mockImplementation(() => {});
+      vi.spyOn(logger, 'logWarn').mockImplementation(() => {});
+      vi.spyOn(logger, 'logInfo').mockImplementation(() => {});
 
       // Mock window.location
       Object.defineProperty(window, 'location', {
@@ -382,7 +380,7 @@ describe('Security Utilities', () => {
       validateSecureEnvironment();
 
       expect(replaceMock).not.toHaveBeenCalled();
-      expect(errorReporter.reportError).not.toHaveBeenCalled();
+      expect(logger.logError).not.toHaveBeenCalled();
     });
 
     it('should redirect to HTTPS in production when using HTTP', () => {
@@ -393,10 +391,7 @@ describe('Security Utilities', () => {
 
       validateSecureEnvironment();
 
-      expect(errorReporter.reportError).toHaveBeenCalledWith(
-        expect.stringContaining('not running over HTTPS'),
-        expect.anything(),
-      );
+      expect(logger.logError).toHaveBeenCalledWith(expect.stringContaining('not running over HTTPS'));
       expect(replaceMock).toHaveBeenCalledWith('https://app.slowburn.com/dashboard');
     });
 
@@ -408,7 +403,7 @@ describe('Security Utilities', () => {
       validateSecureEnvironment();
 
       expect(replaceMock).not.toHaveBeenCalled();
-      expect(errorReporter.reportError).not.toHaveBeenCalled();
+      expect(logger.logError).not.toHaveBeenCalled();
     });
 
     it('should warn about disabled cookies', () => {
@@ -421,10 +416,7 @@ describe('Security Utilities', () => {
 
       validateSecureEnvironment();
 
-      expect(errorReporter.reportWarning).toHaveBeenCalledWith(
-        expect.stringContaining('Cookies are disabled'),
-        expect.anything(),
-      );
+      expect(logger.logWarn).toHaveBeenCalledWith(expect.stringContaining('Cookies are disabled'));
 
       // Restore
       Object.defineProperty(navigator, 'cookieEnabled', {
@@ -439,10 +431,8 @@ describe('Security Utilities', () => {
 
       validateSecureEnvironment();
 
-      expect(errorReporter.reportInfo).toHaveBeenCalledWith(
+      expect(logger.logInfo).toHaveBeenCalledWith(
         expect.stringContaining('Security:'),
-        expect.anything(),
-        undefined,
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Security-Policy': expect.any(String),

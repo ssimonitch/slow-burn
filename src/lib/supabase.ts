@@ -1,7 +1,8 @@
 import { type AuthChangeEvent, createClient, type Session } from '@supabase/supabase-js';
 
 import { supabaseConfig } from '@/config/env';
-import { AppError, handleAuthError } from '@/lib/errors';
+import { AuthError } from '@/lib/errors';
+import { logError } from '@/lib/logger';
 import type { Database } from '@/types/database.types.gen';
 
 /**
@@ -65,32 +66,34 @@ export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfi
 
 /**
  * Helper to get the current session with proper error handling
- * @throws {AppError} When session retrieval fails
+ * @throws {AuthError} When session retrieval fails
  */
 export async function getSession() {
   try {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
-      throw handleAuthError(error, 'getSession');
+      logError('Failed to get session', error, { operation: 'getSession' });
+      throw new AuthError(error.message || 'Failed to get session', 'getSession');
     }
     return data.session;
   } catch (error) {
-    // If it's already an AppError, re-throw it
-    if (error instanceof AppError) {
+    // If it's already an AuthError, re-throw it
+    if (error instanceof AuthError) {
       throw error;
     }
 
     // Handle unexpected errors
-    throw handleAuthError(error, 'getSession', {
-      unexpected: true,
+    logError('Unexpected error getting session', error, {
+      operation: 'getSession',
       errorType: typeof error,
     });
+    throw new AuthError('Failed to get session', 'getSession');
   }
 }
 
 /**
  * Helper to get the current user with proper error handling
- * @throws {AppError} When user retrieval fails
+ * @throws {AuthError} When user retrieval fails
  */
 export async function getCurrentUser() {
   try {
@@ -99,20 +102,22 @@ export async function getCurrentUser() {
       error,
     } = await supabase.auth.getUser();
     if (error) {
-      throw handleAuthError(error, 'getCurrentUser');
+      logError('Failed to get current user', error, { operation: 'getCurrentUser' });
+      throw new AuthError(error.message || 'Failed to get current user', 'getCurrentUser');
     }
     return user;
   } catch (error) {
-    // If it's already an AppError, re-throw it
-    if (error instanceof AppError) {
+    // If it's already an AuthError, re-throw it
+    if (error instanceof AuthError) {
       throw error;
     }
 
     // Handle unexpected errors
-    throw handleAuthError(error, 'getCurrentUser', {
-      unexpected: true,
+    logError('Unexpected error getting user', error, {
+      operation: 'getCurrentUser',
       errorType: typeof error,
     });
+    throw new AuthError('Failed to get current user', 'getCurrentUser');
   }
 }
 

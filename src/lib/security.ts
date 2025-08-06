@@ -1,4 +1,4 @@
-import { ErrorCategory, errorReporter } from '@/lib/errors';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 
 /**
  * Security utilities for the Slow Burn application
@@ -46,30 +46,30 @@ export function validateReturnUrl(url: string, fallback = '/dashboard'): string 
   try {
     // Check for protocol-relative URLs (//example.com)
     if (trimmedUrl.startsWith('//')) {
-      errorReporter.reportWarning(
-        `Security: Rejected protocol-relative URL redirect attempt: ${trimmedUrl}`,
-        ErrorCategory.SECURITY,
-      );
+      logWarn('Security: Rejected protocol-relative URL redirect attempt', {
+        url: trimmedUrl,
+        type: 'protocol-relative',
+      });
       return fallback;
     }
 
     // Check for absolute URLs with protocols
     if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmedUrl)) {
       // This matches any URL with a protocol (http:, https:, javascript:, data:, etc.)
-      errorReporter.reportWarning(
-        `Security: Rejected absolute URL redirect attempt: ${trimmedUrl}`,
-        ErrorCategory.SECURITY,
-      );
+      logWarn('Security: Rejected absolute URL redirect attempt', {
+        url: trimmedUrl,
+        type: 'absolute-url',
+      });
       return fallback;
     }
 
     // Check for URLs that don't start with '/' or contain special characters
     // that could be interpreted as absolute URLs
     if (!trimmedUrl.startsWith('/') || trimmedUrl.includes('@')) {
-      errorReporter.reportWarning(
-        `Security: Rejected non-root-relative URL redirect attempt: ${trimmedUrl}`,
-        ErrorCategory.SECURITY,
-      );
+      logWarn('Security: Rejected non-root-relative URL redirect attempt', {
+        url: trimmedUrl,
+        type: 'non-root-relative',
+      });
       return fallback;
     }
 
@@ -80,10 +80,11 @@ export function validateReturnUrl(url: string, fallback = '/dashboard'): string 
 
     // Ensure the URL is on the same origin
     if (fullUrl.origin !== baseUrl) {
-      errorReporter.reportWarning(
-        `Security: Rejected cross-origin redirect attempt: ${trimmedUrl}`,
-        ErrorCategory.SECURITY,
-      );
+      logWarn('Security: Rejected cross-origin redirect attempt', {
+        url: trimmedUrl,
+        requestOrigin: fullUrl.origin,
+        currentOrigin: baseUrl,
+      });
       return fallback;
     }
 
@@ -99,7 +100,7 @@ export function validateReturnUrl(url: string, fallback = '/dashboard'): string 
       trimmedUrl.includes('%252E') ||
       trimmedUrl.includes('%252e')
     ) {
-      errorReporter.reportWarning(`Security: Rejected path traversal attempt: ${trimmedUrl}`, ErrorCategory.SECURITY);
+      logWarn('Security: Rejected path traversal attempt', { url: trimmedUrl });
       return fallback;
     }
 
@@ -108,14 +109,14 @@ export function validateReturnUrl(url: string, fallback = '/dashboard'): string 
 
     // Final validation: ensure it starts with '/'
     if (!safeUrl.startsWith('/')) {
-      errorReporter.reportWarning(`Security: Invalid normalized URL: ${safeUrl}`, ErrorCategory.SECURITY);
+      logWarn('Security: Invalid normalized URL', { url: safeUrl });
       return fallback;
     }
 
     return safeUrl;
   } catch (error) {
     // If URL parsing fails, it's likely malformed
-    errorReporter.reportWarning(`Security: Failed to parse redirect URL: ${trimmedUrl}`, ErrorCategory.SECURITY, error);
+    logWarn('Security: Failed to parse redirect URL', { url: trimmedUrl, error });
     return fallback;
   }
 }
@@ -145,7 +146,7 @@ export function safeDecodeUrl(encodedUrl: string | null, fallback = '/dashboard'
     return validateReturnUrl(decoded, fallback);
   } catch (error) {
     // If decoding fails, the URL is malformed
-    errorReporter.reportWarning(`Security: Failed to decode URL: ${encodedUrl}`, ErrorCategory.SECURITY, error);
+    logWarn('Security: Failed to decode URL', { url: encodedUrl, error });
     return fallback;
   }
 }
@@ -261,10 +262,7 @@ export function validateSecureEnvironment(): void {
   if (import.meta.env.PROD) {
     // Check for HTTPS
     if (window.location.protocol !== 'https:') {
-      errorReporter.reportError(
-        'Security Warning: Application is not running over HTTPS in production!',
-        ErrorCategory.SECURITY,
-      );
+      logError('Security Warning: Application is not running over HTTPS in production!');
       // In production, force redirect to HTTPS
       const httpsUrl = `https:${window.location.href.substring(window.location.protocol.length)}`;
       window.location.replace(httpsUrl);
@@ -272,18 +270,12 @@ export function validateSecureEnvironment(): void {
 
     // Check for secure cookies (this would need to be verified server-side)
     if (!navigator.cookieEnabled) {
-      errorReporter.reportWarning(
-        'Security Warning: Cookies are disabled. Authentication may not work properly.',
-        ErrorCategory.SECURITY,
-      );
+      logWarn('Security Warning: Cookies are disabled. Authentication may not work properly.');
     }
 
     // Log security recommendations
-    errorReporter.reportInfo(
-      'Security: Ensure the following headers are set at the server level:',
-      ErrorCategory.SECURITY,
-      undefined,
-      { headers: RECOMMENDED_SECURITY_HEADERS },
-    );
+    logInfo('Security: Ensure the following headers are set at the server level:', {
+      headers: RECOMMENDED_SECURITY_HEADERS,
+    });
   }
 }

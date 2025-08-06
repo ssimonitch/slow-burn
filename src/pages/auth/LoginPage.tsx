@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthLayout, LoginForm } from '@/features/auth';
-import { ErrorCategory, errorReporter, ErrorSeverity } from '@/lib/errors';
+import { logError } from '@/lib/logger';
 import { safeDecodeUrl } from '@/lib/security';
 import { useIsAuthenticated } from '@/stores/auth.store';
 
@@ -33,7 +33,7 @@ export const LoginPage = () => {
         void navigate(redirectTo, { replace: true });
       } catch (error) {
         // Navigation failed, but component remains functional
-        errorReporter.reportError('Navigation failed', ErrorCategory.AUTH, ErrorSeverity.HIGH, error);
+        logError('Navigation failed', error, { from: 'LoginPage', redirectTo });
       }
     }
   }, [isAuthenticated, redirectTo, navigate]);
