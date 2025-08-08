@@ -2,7 +2,7 @@
 name: react-ui-builder
 description: Use this agent when creating or modifying React UI components for fitness applications, especially those involving shadcn/ui components, Tailwind CSS styling, or mobile-optimized interfaces. This includes building workout tracking interfaces, exercise timers, progress displays, form inputs for fitness data, or any component that users will interact with during physical activities. Examples: <example>Context: The user is building a workout timer component. user: "Create a timer component for tracking rest periods between sets" assistant: "I'll use the react-ui-builder agent to create a mobile-optimized timer component with large touch targets suitable for use during workouts" <commentary>Since this involves creating a UI component for a fitness application that needs to be usable during workouts, the react-ui-builder agent is the appropriate choice.</commentary></example> <example>Context: The user needs to implement swipe gestures for exercise navigation. user: "Add swipe functionality to navigate between exercises in a workout" assistant: "Let me use the react-ui-builder agent to implement swipe gestures with proper visual feedback for exercise navigation" <commentary>The request involves implementing touch gestures and visual feedback for a fitness UI, which is exactly what the react-ui-builder agent specializes in.</commentary></example>
 tools: Task, Bash, Glob, Grep, LS, ExitPlanMode, Read, Edit, MultiEdit, Write, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: opus
+model: sonnet
 color: purple
 ---
 
