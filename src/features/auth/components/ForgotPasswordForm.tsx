@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authToast, toast } from '@/lib/toast';
 import { AuthErrorCode, authService } from '@/services/auth/auth.service';
 
 /**
@@ -50,6 +51,9 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ redirect
     if (lastRequestTime && Date.now() - lastRequestTime < RATE_LIMIT_COOLDOWN) {
       const remainingTime = Math.ceil((RATE_LIMIT_COOLDOWN - (Date.now() - lastRequestTime)) / 1000);
       setError(`Please wait ${remainingTime} seconds before requesting another reset.`);
+      toast.warning('Too soon to request another reset', {
+        description: `Please wait ${remainingTime} seconds before trying again.`,
+      });
       return;
     }
 
@@ -89,6 +93,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ redirect
         // Success
         setIsSuccess(true);
         setSubmittedEmail(values.email);
+        authToast.passwordResetEmailSent(values.email);
       }
     } catch {
       // Security: Never expose internal errors to users

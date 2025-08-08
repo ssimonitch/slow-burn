@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authToast, toast } from '@/lib/toast';
 import { AuthErrorCode, type SignUpCredentials } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -117,10 +118,18 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSignInClick
       };
 
       await signUp(credentials);
+      authToast.signupSuccess();
       onSuccess?.();
     } catch {
+      // Show toast for specific error types
+      if (authError?.code === AuthErrorCode.RATE_LIMITED) {
+        authToast.rateLimited();
+      } else if (authError?.code === AuthErrorCode.NETWORK_ERROR || authError?.code === AuthErrorCode.OFFLINE) {
+        toast.error('No internet connection', {
+          description: 'Please check your network and try again.',
+        });
+      }
       // Error is already set in the store by signUp
-      // No need to handle here as the error is displayed via authError from store
     } finally {
       setIsSubmitting(false);
     }

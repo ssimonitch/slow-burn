@@ -21,24 +21,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthResponse } from '@/services/auth/auth.service';
 import { AuthErrorCode, authService } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
-import { createMockAuthStore, createMockUser } from '@/test/factories/auth';
+import { createMockAuthError, createMockAuthStore, createMockUser } from '@/test/factories/auth';
 import { render } from '@/test/helpers/render';
 
 import { ResetPasswordForm } from './ResetPasswordForm';
 
 // Mock the auth service
-vi.mock('@/services/auth/auth.service', () => ({
-  AuthErrorCode: {
-    SESSION_EXPIRED: 'SESSION_EXPIRED',
-    NO_SESSION: 'NO_SESSION',
-    WEAK_PASSWORD: 'WEAK_PASSWORD',
-    NETWORK_ERROR: 'NETWORK_ERROR',
-    UNKNOWN: 'UNKNOWN',
-  },
-  authService: {
-    updatePassword: vi.fn(),
-  },
-}));
+vi.mock('@/services/auth/auth.service', async () => {
+  const actual = await vi.importActual('@/services/auth/auth.service');
+  return {
+    ...actual,
+    AuthErrorCode: {
+      SESSION_EXPIRED: 'SESSION_EXPIRED',
+      NO_SESSION: 'NO_SESSION',
+      WEAK_PASSWORD: 'WEAK_PASSWORD',
+      NETWORK_ERROR: 'NETWORK_ERROR',
+      UNKNOWN: 'UNKNOWN',
+    },
+    authService: {
+      updatePassword: vi.fn(),
+    },
+  };
+});
 
 // Mock the auth store
 vi.mock('@/stores/auth.store');
@@ -530,7 +534,7 @@ describe('ResetPasswordForm', () => {
       );
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Invalid token', code: AuthErrorCode.SESSION_EXPIRED },
+        error: createMockAuthError('Invalid token', AuthErrorCode.SESSION_EXPIRED),
       });
 
       render(<ResetPasswordForm />);
@@ -567,7 +571,7 @@ describe('ResetPasswordForm', () => {
       const user = userEvent.setup();
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Session expired', code: AuthErrorCode.SESSION_EXPIRED },
+        error: createMockAuthError('Session expired', AuthErrorCode.SESSION_EXPIRED),
       });
 
       render(<ResetPasswordForm />);
@@ -597,7 +601,7 @@ describe('ResetPasswordForm', () => {
       const user = userEvent.setup();
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'No session', code: AuthErrorCode.NO_SESSION },
+        error: createMockAuthError('No session', AuthErrorCode.NO_SESSION),
       });
 
       render(<ResetPasswordForm />);
@@ -625,7 +629,7 @@ describe('ResetPasswordForm', () => {
       const user = userEvent.setup();
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Weak password', code: AuthErrorCode.WEAK_PASSWORD },
+        error: createMockAuthError('Weak password', AuthErrorCode.WEAK_PASSWORD),
       });
 
       render(<ResetPasswordForm />);
@@ -651,7 +655,7 @@ describe('ResetPasswordForm', () => {
       const user = userEvent.setup();
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Unknown error', code: AuthErrorCode.UNKNOWN },
+        error: createMockAuthError('Unknown error', AuthErrorCode.UNKNOWN),
       });
 
       render(<ResetPasswordForm />);
@@ -844,7 +848,7 @@ describe('ResetPasswordForm', () => {
       const user = userEvent.setup();
       mockUpdatePassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Session expired', code: AuthErrorCode.SESSION_EXPIRED },
+        error: createMockAuthError('Session expired', AuthErrorCode.SESSION_EXPIRED),
       });
 
       render(<ResetPasswordForm />);

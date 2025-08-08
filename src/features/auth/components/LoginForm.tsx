@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authToast, toast } from '@/lib/toast';
 import { AuthErrorCode, type SignInCredentials } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -54,10 +55,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, redirectUrl }) 
       };
 
       await signIn(credentials);
+      authToast.loginSuccess();
       onSuccess?.();
     } catch {
+      // Show toast for specific error types
+      if (authError?.code === AuthErrorCode.RATE_LIMITED) {
+        authToast.rateLimited();
+      } else if (authError?.code === AuthErrorCode.EMAIL_NOT_CONFIRMED) {
+        authToast.emailNotConfirmed();
+      } else if (authError?.code === AuthErrorCode.NETWORK_ERROR || authError?.code === AuthErrorCode.OFFLINE) {
+        toast.error('No internet connection', {
+          description: 'Please check your network and try again.',
+        });
+      }
       // Error is already set in the store by signIn
-      // No need to handle here as the error is displayed via authError from store
     } finally {
       setIsSubmitting(false);
     }

@@ -46,6 +46,11 @@ vi.mock('@/features/auth', () => ({
   ),
 }));
 
+// Mock the ErrorBoundary
+vi.mock('@/components/ErrorBoundary', () => ({
+  ErrorBoundaryWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock the security utilities
 vi.mock('@/lib/security', () => ({
   safeDecodeUrl: vi.fn().mockImplementation((url: string | null, fallback = '/dashboard'): string => {

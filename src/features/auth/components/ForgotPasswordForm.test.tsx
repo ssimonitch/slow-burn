@@ -18,24 +18,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthResponse } from '@/services/auth/auth.service';
 import { AuthErrorCode, authService } from '@/services/auth/auth.service';
+import { createMockAuthError } from '@/test/factories/auth';
 import { render } from '@/test/helpers/render';
 
 import { ForgotPasswordForm } from './ForgotPasswordForm';
 
 // Mock the auth service
-vi.mock('@/services/auth/auth.service', () => ({
-  AuthErrorCode: {
-    INVALID_EMAIL: 'INVALID_EMAIL',
-    NETWORK_ERROR: 'NETWORK_ERROR',
-    OFFLINE: 'OFFLINE',
-    RATE_LIMITED: 'RATE_LIMITED',
-    USER_NOT_FOUND: 'USER_NOT_FOUND',
-    UNKNOWN: 'UNKNOWN',
-  },
-  authService: {
-    resetPassword: vi.fn(),
-  },
-}));
+vi.mock('@/services/auth/auth.service', async () => {
+  const actual = await vi.importActual('@/services/auth/auth.service');
+  return {
+    ...actual,
+    AuthErrorCode: {
+      INVALID_EMAIL: 'INVALID_EMAIL',
+      NETWORK_ERROR: 'NETWORK_ERROR',
+      OFFLINE: 'OFFLINE',
+      RATE_LIMITED: 'RATE_LIMITED',
+      USER_NOT_FOUND: 'USER_NOT_FOUND',
+      UNKNOWN: 'UNKNOWN',
+    },
+    authService: {
+      resetPassword: vi.fn(),
+    },
+  };
+});
 
 describe('ForgotPasswordForm', () => {
   const mockResetPassword = vi.mocked(authService.resetPassword);
@@ -291,7 +296,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Invalid email', code: AuthErrorCode.INVALID_EMAIL },
+        error: createMockAuthError('Invalid email', AuthErrorCode.INVALID_EMAIL),
       });
 
       render(<ForgotPasswordForm />);
@@ -313,7 +318,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Network error', code: AuthErrorCode.NETWORK_ERROR },
+        error: createMockAuthError('Network error', AuthErrorCode.NETWORK_ERROR),
       });
 
       render(<ForgotPasswordForm />);
@@ -333,7 +338,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Offline', code: AuthErrorCode.OFFLINE },
+        error: createMockAuthError('Offline', AuthErrorCode.OFFLINE),
       });
 
       render(<ForgotPasswordForm />);
@@ -353,7 +358,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Rate limited', code: AuthErrorCode.RATE_LIMITED },
+        error: createMockAuthError('Rate limited', AuthErrorCode.RATE_LIMITED),
       });
 
       render(<ForgotPasswordForm />);
@@ -373,7 +378,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'User not found', code: AuthErrorCode.USER_NOT_FOUND },
+        error: createMockAuthError('User not found', AuthErrorCode.USER_NOT_FOUND),
       });
 
       render(<ForgotPasswordForm />);
@@ -397,7 +402,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Unknown error', code: AuthErrorCode.UNKNOWN },
+        error: createMockAuthError('Unknown error', AuthErrorCode.UNKNOWN),
       });
 
       render(<ForgotPasswordForm />);
@@ -502,7 +507,7 @@ describe('ForgotPasswordForm', () => {
       const user = userEvent.setup();
       mockResetPassword.mockResolvedValue({
         data: null,
-        error: { name: 'AuthError', message: 'Network error', code: AuthErrorCode.NETWORK_ERROR },
+        error: createMockAuthError('Network error', AuthErrorCode.NETWORK_ERROR),
       });
 
       render(<ForgotPasswordForm />);
@@ -548,7 +553,7 @@ describe('ForgotPasswordForm', () => {
       // First submission fails
       mockResetPassword.mockResolvedValueOnce({
         data: null,
-        error: { name: 'AuthError', message: 'Network error', code: AuthErrorCode.NETWORK_ERROR },
+        error: createMockAuthError('Network error', AuthErrorCode.NETWORK_ERROR),
       });
 
       render(<ForgotPasswordForm />);

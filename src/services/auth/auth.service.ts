@@ -16,6 +16,37 @@ export class AuthError extends Error {
     this.code = code;
     this.originalError = originalError;
   }
+
+  /**
+   * Get user-friendly error message
+   */
+  getUserMessage(): string {
+    switch (this.code) {
+      case AuthErrorCode.INVALID_CREDENTIALS:
+        return 'Invalid email or password. Please try again.';
+      case AuthErrorCode.EMAIL_NOT_CONFIRMED:
+        return 'Please confirm your email address before signing in.';
+      case AuthErrorCode.USER_NOT_FOUND:
+        return 'No account found with this email address.';
+      case AuthErrorCode.SESSION_EXPIRED:
+        return 'Your session has expired. Please sign in again.';
+      case AuthErrorCode.NO_SESSION:
+        return 'Please sign in to continue.';
+      case AuthErrorCode.RATE_LIMITED:
+        return 'Too many attempts. Please wait a few minutes and try again.';
+      case AuthErrorCode.NETWORK_ERROR:
+      case AuthErrorCode.OFFLINE:
+        return 'Unable to connect. Please check your internet connection.';
+      case AuthErrorCode.WEAK_PASSWORD:
+        return 'Password is too weak. Please use a stronger password.';
+      case AuthErrorCode.INVALID_EMAIL:
+        return 'Please enter a valid email address.';
+      case AuthErrorCode.SERVER_ERROR:
+        return 'Something went wrong on our end. Please try again later.';
+      default:
+        return this.message || 'Authentication failed. Please try again.';
+    }
+  }
 }
 
 /**
@@ -48,6 +79,13 @@ export const AuthErrorCode = {
 } as const;
 
 export type AuthErrorCode = (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
+
+/**
+ * Type guard to check if an error is an AuthError
+ */
+export function isAuthError(error: unknown): error is AuthError {
+  return error instanceof AuthError;
+}
 
 /**
  * Maps Supabase auth errors to our custom error codes

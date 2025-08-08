@@ -1,8 +1,8 @@
 import { type AuthChangeEvent, createClient, type Session } from '@supabase/supabase-js';
 
 import { supabaseConfig } from '@/config/env';
-import { AuthError } from '@/lib/errors';
 import { logError } from '@/lib/logger';
+import { AuthError, AuthErrorCode } from '@/services/auth/auth.service';
 import type { Database } from '@/types/database.types.gen';
 
 /**
@@ -73,7 +73,7 @@ export async function getSession() {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       logError('Failed to get session', error, { operation: 'getSession' });
-      throw new AuthError(error.message || 'Failed to get session', 'getSession');
+      throw new AuthError(error.message || 'Failed to get session', AuthErrorCode.UNKNOWN);
     }
     return data.session;
   } catch (error) {
@@ -87,7 +87,7 @@ export async function getSession() {
       operation: 'getSession',
       errorType: typeof error,
     });
-    throw new AuthError('Failed to get session', 'getSession');
+    throw new AuthError('Failed to get session', AuthErrorCode.UNKNOWN);
   }
 }
 
@@ -103,7 +103,7 @@ export async function getCurrentUser() {
     } = await supabase.auth.getUser();
     if (error) {
       logError('Failed to get current user', error, { operation: 'getCurrentUser' });
-      throw new AuthError(error.message || 'Failed to get current user', 'getCurrentUser');
+      throw new AuthError(error.message || 'Failed to get current user', AuthErrorCode.NO_SESSION);
     }
     return user;
   } catch (error) {
@@ -117,7 +117,7 @@ export async function getCurrentUser() {
       operation: 'getCurrentUser',
       errorType: typeof error,
     });
-    throw new AuthError('Failed to get current user', 'getCurrentUser');
+    throw new AuthError('Failed to get current user', AuthErrorCode.NO_SESSION);
   }
 }
 

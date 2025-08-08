@@ -12,7 +12,7 @@
 
 import type { AuthError as SupabaseAuthError, Session, User } from '@supabase/supabase-js';
 
-import type { AuthError, SignInCredentials, SignUpCredentials } from '@/services/auth/auth.service';
+import { AuthError, AuthErrorCode, type SignInCredentials, type SignUpCredentials } from '@/services/auth/auth.service';
 
 /**
  * Creates a mock Supabase User object with sensible defaults
@@ -61,6 +61,21 @@ export function createMockSupabaseError(overrides: Partial<SupabaseAuthError> = 
     name: overrides.name ?? 'AuthApiError',
     ...overrides,
   } as SupabaseAuthError;
+}
+
+/**
+ * Creates a mock AuthError object from auth.service
+ * @param message - Error message
+ * @param code - AuthErrorCode
+ * @param originalError - Optional original error
+ * @returns Properly typed AuthError object
+ */
+export function createMockAuthError(
+  message = 'Authentication error',
+  code: AuthErrorCode = AuthErrorCode.UNKNOWN,
+  originalError?: unknown,
+): AuthError {
+  return new AuthError(message, code, originalError);
 }
 
 /**

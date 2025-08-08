@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { ErrorBoundaryWrapper } from '@/components/ErrorBoundary';
 import { AuthLayout, LoginForm } from '@/features/auth';
+import { authErrorHandler } from '@/lib/errorHandlers';
 import { logError } from '@/lib/logger';
 import { safeDecodeUrl } from '@/lib/security';
 import { useIsAuthenticated } from '@/stores/auth.store';
@@ -44,8 +46,10 @@ export const LoginPage = () => {
   };
 
   return (
-    <AuthLayout>
-      <LoginForm onSuccess={handleSuccess} redirectUrl={from ?? undefined} />
-    </AuthLayout>
+    <ErrorBoundaryWrapper handlers={[authErrorHandler]}>
+      <AuthLayout>
+        <LoginForm onSuccess={handleSuccess} redirectUrl={from ?? undefined} />
+      </AuthLayout>
+    </ErrorBoundaryWrapper>
   );
 };

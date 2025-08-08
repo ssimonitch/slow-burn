@@ -86,40 +86,8 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Authentication-related errors
- */
-export class AuthError extends Error {
-  public readonly operation?: string;
-  public readonly code?: string;
-
-  constructor(message: string, operation?: string, code?: string) {
-    super(message);
-    this.name = 'AuthError';
-    this.operation = operation;
-    this.code = code;
-  }
-
-  /**
-   * Get user-friendly error message
-   */
-  getUserMessage(): string {
-    // Common auth error messages
-    if (this.message.includes('Invalid login credentials')) {
-      return 'Invalid email or password. Please try again.';
-    }
-
-    if (this.message.includes('Email not confirmed')) {
-      return 'Please confirm your email address before signing in.';
-    }
-
-    if (this.message.includes('User already registered')) {
-      return 'An account with this email already exists.';
-    }
-
-    return this.message || 'Authentication failed. Please try again.';
-  }
-}
+// AuthError is now exported from @/services/auth/auth.service
+// This avoids duplication and confusion
 
 /**
  * Validation errors for form inputs and data
@@ -169,10 +137,9 @@ export class PWAError extends Error {
 /**
  * Type guard to check if an error is one of our custom error types
  */
-export function isAppError(error: unknown): error is ApiError | AuthError | ValidationError | StorageError | PWAError {
+export function isAppError(error: unknown): error is ApiError | ValidationError | StorageError | PWAError {
   return (
     error instanceof ApiError ||
-    error instanceof AuthError ||
     error instanceof ValidationError ||
     error instanceof StorageError ||
     error instanceof PWAError
@@ -186,9 +153,8 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
-export function isAuthError(error: unknown): error is AuthError {
-  return error instanceof AuthError;
-}
+// Re-export isAuthError utility to work with AuthError from auth.service
+export { isAuthError } from '@/services/auth/auth.service';
 
 export function isValidationError(error: unknown): error is ValidationError {
   return error instanceof ValidationError;
@@ -206,7 +172,7 @@ export function isPWAError(error: unknown): error is PWAError {
  * Extract a user-friendly message from any error
  */
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError || error instanceof AuthError) {
+  if (error instanceof ApiError) {
     return error.getUserMessage();
   }
 

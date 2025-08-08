@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { authToast, toast } from '@/lib/toast';
 import { AuthErrorCode, authService } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -177,6 +178,9 @@ export const ResetPasswordForm = () => {
     if (lastSubmitTime && Date.now() - lastSubmitTime < SUBMIT_COOLDOWN) {
       const remainingTime = Math.ceil((SUBMIT_COOLDOWN - (Date.now() - lastSubmitTime)) / 1000);
       setError(`Please wait ${remainingTime} seconds before trying again.`);
+      toast.warning('Too soon to try again', {
+        description: `Please wait ${remainingTime} seconds before submitting.`,
+      });
       return;
     }
 
@@ -213,6 +217,7 @@ export const ResetPasswordForm = () => {
 
       // Success! Show success message and redirect
       setSuccess(true);
+      authToast.passwordResetSuccess();
     } catch {
       // Security: Never expose internal errors
       setError('Unable to reset password. Please try again.');

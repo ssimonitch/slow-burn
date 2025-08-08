@@ -5,14 +5,22 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Toaster } from '@/components/ui/sonner';
 import { isDevelopment } from '@/config/env';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { setupGlobalErrorHandlers } from '@/lib/logger';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from '@/pages/auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
 import { queryClient } from '@/services/query/client';
 import { useAuthInit } from '@/stores';
+
+// Network monitoring component
+function NetworkMonitor() {
+  useNetworkStatus();
+  return null;
+}
 
 // Create the router configuration
 const router = createBrowserRouter([
@@ -90,7 +98,9 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+          <NetworkMonitor />
           <RouterProvider router={router} />
+          <Toaster position="top-center" richColors closeButton />
         </ThemeProvider>
         {isDevelopment() && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
