@@ -248,14 +248,6 @@ export const toast = {
  */
 export const authToast = {
   /**
-   * Show success toast for login
-   */
-  loginSuccess: (userName?: string) => {
-    const message = userName ? `Welcome back, ${userName}!` : 'Successfully signed in!';
-    toast.success(message);
-  },
-
-  /**
    * Show success toast for signup
    */
   signupSuccess: () => {

@@ -83,12 +83,27 @@ This is a solo developer MVP project with a focus on leveraging mature, battle-t
 
 ### Core Library Choices
 - **TanStack Query**: Server state management instead of manual fetch handling
-- **Sonner**: Toast notifications instead of custom implementation
+- **Sonner**: Toast notifications with bottom-right positioning in App.tsx
 - **React Hook Form + Zod**: Form handling and validation
 - **Framer Motion**: Animations for enhanced UX
 - **date-fns**: Date manipulation utilities
 
 This approach allows focusing development effort on the unique aspects of the AI fitness companion rather than solving already-solved problems.
+
+## Error Handling Architecture
+
+### Error Boundaries
+The application uses a composable error boundary pattern:
+- **ErrorBoundary**: Base component with customizable error handlers
+- **AuthErrorBoundary**: Specialized for authentication errors with authErrorHandler
+- Composable handlers allow context-specific error recovery strategies
+- All error boundaries integrate with the centralized error reporting system
+
+### Toast Notifications
+User feedback is provided via Sonner toasts:
+- Configured globally in App.tsx with bottom-right positioning
+- Integrated throughout auth components for success/error feedback
+- Accessible and mobile-friendly positioning
 
 ## Security & Routing
 

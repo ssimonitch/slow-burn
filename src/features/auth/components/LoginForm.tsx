@@ -55,7 +55,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, redirectUrl }) 
       };
 
       await signIn(credentials);
-      authToast.loginSuccess();
       onSuccess?.();
     } catch {
       // Show toast for specific error types

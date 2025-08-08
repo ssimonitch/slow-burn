@@ -100,7 +100,7 @@ function App() {
         <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
           <NetworkMonitor />
           <RouterProvider router={router} />
-          <Toaster position="top-center" richColors closeButton />
+          <Toaster position="bottom-right" richColors closeButton />
         </ThemeProvider>
         {isDevelopment() && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>
