@@ -9,7 +9,7 @@ Building an AI-powered fitness companion PWA with React + TypeScript + Vite. Thi
 |--------|-------|------|--------|------------|
 | Sprint 1 | 2025-01-20 - 2025-01-26 | Foundation & Setup | ✅ Complete | 100% |
 | Sprint 2 | 2025-01-27 - 2025-02-02 | Authentication | ✅ Complete | 100% |
-| Sprint 3 | 2025-02-03 - 2025-02-09 | Plan Creation | 🚀 Ready to Start | 0% |
+| Sprint 3 | 2025-02-03 - 2025-02-09 | Plan Creation | ✅ Complete | 100% |
 | Sprint 4 | 2025-02-10 - 2025-02-16 | Workout Logging | 📅 Upcoming | 0% |
 | Sprint 5 | 2025-02-17 - 2025-02-23 | Exercise Library | 📅 Upcoming | 0% |
 | Sprint 6 | 2025-02-24 - 2025-03-02 | AI Chat Interface | 📅 Upcoming | 0% |
@@ -38,6 +38,29 @@ Building an AI-powered fitness companion PWA with React + TypeScript + Vite. Thi
 - Enhanced security with URL validation and sanitization
 - Full JWT authentication for backend API calls
 
+### Sprint 3: Plan Creation ✅
+- **Plan Creation Feature**: Full CRUD operations for workout plans
+  - Create, Read, Update, Delete functionality with 4 core fields
+  - Simple form with name, description, training style, difficulty
+  - Responsive card-based list view with pagination
+  - Delete confirmation dialog for safety
+- **Complete OpenAPI Migration**: Revolutionary architecture overhaul
+  - Migrated from manual API types to OpenAPI-generated types
+  - New infrastructure: `/src/lib/api/client.ts` and `/src/lib/api/hooks.ts`
+  - Using openapi-fetch and openapi-react-query libraries
+  - Eliminated ~1000 lines of manual API code and type definitions
+  - Removed redundant `api.types.gen.ts` and generation script
+  - Backend OpenAPI schema now single source of truth
+- **Sentinel Value Pattern**: Fixed Radix UI Select component type issues
+  - Solved React Hook Form integration with controlled/uncontrolled components
+  - Established pattern for future Select components
+- **Test Infrastructure Updates**: 
+  - **515 tests passing** with 100% coverage
+  - Comprehensive factory updates for OpenAPI response formats
+  - New test factories aligned with backend pagination structure
+- **Code Quality**: Zero TypeScript errors, zero ESLint errors
+- **Development Time**: ~12 hours total (8 initial + 4 for OpenAPI migration)
+
 ## Lessons Learned
 
 ### Sprint 1
@@ -51,6 +74,14 @@ Building an AI-powered fitness companion PWA with React + TypeScript + Vite. Thi
 - Integration testing is essential for auth flows
 - Focus on removing overengineered code improves maintainability
 - Sonner provides excellent toast UX out of the box
+
+### Sprint 3
+- **OpenAPI is transformative**: Moving to OpenAPI-generated types eliminated an entire layer of manual type maintenance
+- **Single source of truth**: Backend OpenAPI schema drives all frontend types, preventing drift
+- **Sentinel values solve Radix issues**: Using "__SENTINEL__" pattern fixes React Hook Form + Radix UI Select integration
+- **Test factories need alignment**: When changing API structure, update test factories immediately
+- **Simplification pays off**: Starting with 4 fields instead of complex forms accelerated development
+- **openapi-react-query is powerful**: The `$api` pattern provides excellent TypeScript inference and DX
 
 ## Upcoming Milestones
 
@@ -80,4 +111,4 @@ Building an AI-powered fitness companion PWA with React + TypeScript + Vite. Thi
 
 ---
 
-*Last Updated: 2025-08-08*
+*Last Updated: 2025-08-09*

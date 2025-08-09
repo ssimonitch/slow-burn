@@ -1,11 +1,10 @@
 # Backend Integration Context for Frontend Team
 
-This document provides important context from the backend Sprint 2 implementation that will help the frontend team understand the architecture and capabilities available.
+This document provides important context that will help the frontend team understand the architecture and capabilities available.
 
 ## Authentication Architecture
 
 ### Key Decision: Frontend-Direct Authentication
-During Sprint 2, a critical architecture decision was made:
 - **Frontend handles all user-facing authentication** by calling Supabase directly using the supabase-js client library
 - **Backend acts as a secure resource server** that validates JWTs but does NOT provide authentication endpoints like `/login` or `/signup`
 - This approach simplifies the architecture and leverages Supabase's robust client-side authentication features
@@ -85,6 +84,13 @@ The exercise library includes:
 
 ## API Patterns
 
+### OpenAPI Schema
+The backend provides a comprehensive OpenAPI schema that the frontend uses for type generation:
+- **Schema URL**: `/api/openapi.json` - Full OpenAPI 3.1 specification
+- **Type Generation**: Frontend uses `openapi-typescript` to generate TypeScript types
+- **Client Generation**: Using `openapi-fetch` and `openapi-react-query` for type-safe API calls
+- **Single Source of Truth**: Backend schema drives all frontend API types - no manual definitions
+
 ### Protected Endpoints
 All backend endpoints (except health checks) require JWT authentication:
 ```
@@ -102,7 +108,16 @@ Authorization: Bearer <jwt_token_from_supabase>
 The backend uses consistent JSON response formats with:
 - Pydantic models for automatic validation
 - Detailed error messages with proper HTTP status codes
-- Pagination support where applicable
+- Pagination support with standardized structure:
+  ```typescript
+  {
+    items: T[],
+    total: number,
+    page: number,
+    per_page: number,
+    pages: number
+  }
+  ```
 
 ## AI Integration Details
 

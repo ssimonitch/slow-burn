@@ -87,8 +87,29 @@ This is a solo developer MVP project with a focus on leveraging mature, battle-t
 - **React Hook Form + Zod**: Form handling and validation
 - **Framer Motion**: Animations for enhanced UX
 - **date-fns**: Date manipulation utilities
+- **openapi-fetch + openapi-react-query**: Type-safe API client generation from OpenAPI schema
 
 This approach allows focusing development effort on the unique aspects of the AI fitness companion rather than solving already-solved problems.
+
+## API Integration
+
+### OpenAPI-First Development
+Use OpenAPI-generated types and clients:
+- **Single Source of Truth**: Backend OpenAPI schema (`openapi.json`) drives all API types
+- **No Manual Types**: All API request/response types are auto-generated
+- **Type-Safe Hooks**: Using `$api` from `openapi-react-query` for all API calls
+
+### API Infrastructure
+- **`src/lib/api/client.ts`**: OpenAPI fetch client with auth interceptors
+- **`src/lib/api/hooks.ts`**: React Query hooks using `$api` pattern
+- **`src/types/api.types.gen.ts`**: Generated TypeScript types from backend schema
+
+### Usage Pattern
+```typescript
+// All API calls use the $api pattern
+const { data, error, isPending } = $api.useQuery('get', '/api/v1/plans');
+const createPlan = $api.useMutation('post', '/api/v1/plans');
+```
 
 ## Error Handling Architecture
 
