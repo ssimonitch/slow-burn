@@ -5,6 +5,11 @@
  * - API responses and errors
  * - Fetch API mocks
  * - Request/response data
+ * - Backend paginated responses matching OpenAPI schema
+ *
+ * All factories work with backend format exclusively as the application now uses
+ * the OpenAPI client directly without transformation layers. Types are imported
+ * from @/lib/api for consistency with the OpenAPI schema.
  *
  * Used across API service tests to maintain consistency and avoid code duplication.
  */
@@ -12,7 +17,17 @@
 import { vi } from 'vitest';
 
 import { ApiError } from '@/lib/errors';
-import type { ApiResponse, PaginatedResponse, PaginationMeta } from '@/services/api/types';
+
+/**
+ * Backend paginated response format (matches OpenAPI schema)
+ * This is now the ONLY pagination format used throughout the application
+ */
+export interface BackendPaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  per_page: number;
+}
 
 /**
  * Creates a mock Response object for testing fetch operations
@@ -62,16 +77,12 @@ export function createMockResponse<T>(
 }
 
 /**
- * Creates a mock API response wrapper
+ * Creates a mock API response
  * @param data - Response data
- * @param message - Optional success message
- * @returns Properly typed ApiResponse
+ * @returns Response data directly (OpenAPI client returns data directly)
  */
-export function createApiResponse<T>(data: T, message?: string): ApiResponse<T> {
-  return {
-    data,
-    ...(message && { message }),
-  };
+export function createApiResponse<T>(data: T): T {
+  return data;
 }
 
 /**
@@ -80,23 +91,10 @@ export function createApiResponse<T>(data: T, message?: string): ApiResponse<T> 
  * @param code - Error code
  * @param field - Field that caused the error
  * @param detail - Additional error details
- * @returns ApiResponse with error
+ * @returns ApiError instance
  */
-export function createApiErrorResponse(
-  message: string,
-  code?: string,
-  field?: string,
-  detail?: unknown,
-): ApiResponse<null> {
-  return {
-    data: null,
-    error: {
-      message,
-      code,
-      field,
-      detail,
-    },
-  };
+export function createApiErrorResponse(message: string, code?: string, field?: string, detail?: unknown): ApiError {
+  return new ApiError(message, 500, undefined, code, field, detail);
 }
 
 /**
@@ -121,22 +119,35 @@ export function createMockApiError(
 }
 
 /**
- * Creates a mock paginated response
+ * Creates a mock paginated response in backend format (OpenAPI schema)
+ *
+ * Use this factory when testing:
+ * - OpenAPI client request/response handling
+ * - Mock API responses that simulate backend responses
+ * - Component tests that work with backend data format
+ * - Network layer testing with realistic backend data
+ *
+ * Backend format: { items: T[], total: number, page: number, per_page: number }
+ *
  * @param items - Array of items
- * @param meta - Pagination metadata (optional, will be generated if not provided)
- * @returns PaginatedResponse with items and metadata
+ * @param options - Backend pagination options
+ * @returns BackendPaginatedResponse matching OpenAPI schema
  */
-export function createPaginatedResponse<T>(items: T[], meta?: Partial<PaginationMeta>): PaginatedResponse<T> {
-  const defaultMeta: PaginationMeta = {
-    page: 1,
-    limit: 20,
-    total: items.length,
-    totalPages: Math.ceil(items.length / 20),
-  };
+export function createBackendPaginatedResponse<T>(
+  items: T[],
+  options: {
+    page?: number;
+    per_page?: number;
+    total?: number;
+  } = {},
+): BackendPaginatedResponse<T> {
+  const { page = 1, per_page = 20, total = items.length } = options;
 
   return {
-    data: items,
-    meta: { ...defaultMeta, ...meta },
+    items,
+    total,
+    page,
+    per_page,
   };
 }
 

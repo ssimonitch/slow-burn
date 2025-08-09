@@ -66,7 +66,13 @@ describe('Dashboard', () => {
       // Check for workout plans card
       expect(screen.getByText('Workout Plans')).toBeInTheDocument();
       expect(screen.getByText('Your personalized training programs')).toBeInTheDocument();
-      expect(screen.getByText('No workout plans yet. Create your first plan to get started!')).toBeInTheDocument();
+      expect(
+        screen.getByText('Create and manage your workout plans to structure your training journey.'),
+      ).toBeInTheDocument();
+
+      // Check for navigation buttons
+      expect(screen.getByRole('link', { name: 'View Plans' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Create Plan' })).toBeInTheDocument();
 
       // Check for recent workouts card
       expect(screen.getByText('Recent Workouts')).toBeInTheDocument();
@@ -301,6 +307,51 @@ describe('Dashboard', () => {
     });
   });
 
+  describe('navigation functionality', () => {
+    beforeEach(() => {
+      vi.mocked(useUser).mockReturnValue(mockUser);
+      vi.mocked(useAuthStore).mockImplementation((selector) => {
+        const store = createPartialAuthStore({ signOut: mockSignOut });
+        return selector ? selector(store) : store.signOut;
+      });
+    });
+
+    it('should provide navigation links to plans page', () => {
+      render(<Dashboard />);
+
+      // Check that navigation links exist and point to the correct route
+      const viewPlansLink = screen.getByRole('link', { name: 'View Plans' });
+      const createPlanLink = screen.getByRole('link', { name: 'Create Plan' });
+
+      expect(viewPlansLink).toBeInTheDocument();
+      expect(viewPlansLink).toHaveAttribute('href', '/plans');
+
+      expect(createPlanLink).toBeInTheDocument();
+      expect(createPlanLink).toHaveAttribute('href', '/plans');
+    });
+
+    it('should have proper styling for navigation buttons', () => {
+      render(<Dashboard />);
+
+      const viewPlansLink = screen.getByRole('link', { name: 'View Plans' });
+      const createPlanLink = screen.getByRole('link', { name: 'Create Plan' });
+
+      // Primary button styling for "View Plans"
+      expect(viewPlansLink).toHaveClass('min-h-[44px]'); // Mobile-friendly touch target
+
+      // Secondary button styling for "Create Plan"
+      expect(createPlanLink).toHaveClass('min-h-[44px]'); // Mobile-friendly touch target
+    });
+
+    it('should display navigation buttons in responsive layout', () => {
+      render(<Dashboard />);
+
+      // Find the container for the navigation buttons
+      const buttonContainer = screen.getByRole('link', { name: 'View Plans' }).closest('.flex');
+      expect(buttonContainer).toHaveClass('flex', 'flex-col', 'gap-2', 'sm:flex-row');
+    });
+  });
+
   describe('future extensibility', () => {
     beforeEach(() => {
       vi.mocked(useUser).mockReturnValue(mockUser);
@@ -314,7 +365,9 @@ describe('Dashboard', () => {
       render(<Dashboard />);
 
       // Verify placeholder content suggests future integration points
-      expect(screen.getByText('No workout plans yet. Create your first plan to get started!')).toBeInTheDocument();
+      expect(
+        screen.getByText('Create and manage your workout plans to structure your training journey.'),
+      ).toBeInTheDocument();
       expect(screen.getByText('Start logging workouts to see your progress here.')).toBeInTheDocument();
       expect(screen.getByText('Your AI companion will be available soon!')).toBeInTheDocument();
     });

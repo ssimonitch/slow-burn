@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore, useUser } from '@/stores/auth.store';
@@ -38,10 +40,18 @@ export function Dashboard() {
             <CardTitle>Workout Plans</CardTitle>
             <CardDescription>Your personalized training programs</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              No workout plans yet. Create your first plan to get started!
+              Create and manage your workout plans to structure your training journey.
             </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button asChild className="min-h-[44px] w-full sm:w-auto">
+                <Link to="/plans">View Plans</Link>
+              </Button>
+              <Button asChild variant="outline" className="min-h-[44px] w-full sm:w-auto">
+                <Link to="/plans">Create Plan</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

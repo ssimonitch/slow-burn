@@ -425,7 +425,8 @@ export function createWorkoutPlan(overrides?: Partial<WorkoutPlan>): WorkoutPlan
 // @/test/factories/api.ts - API response factories:
 export function createApiResponse<T>(data: T, status?: number): ApiResponse<T>;
 export function createApiError(message: string, code: string): ApiResponse<null>;
-export function createPaginatedResponse<T>(items: T[], total: number): PaginatedResponse<T>;
+export function createPaginatedResponse<T>(items: T[], meta?: Partial<PaginationMeta>): PaginatedResponse<T>; // Frontend format
+export function createBackendPaginatedResponse<T>(items: T[], options?: BackendPaginationOptions): BackendPaginatedResponse<T>; // Backend format
 
 // @/test/helpers/render.tsx - Custom render with providers:
 export function render(ui: ReactElement, options?: CustomRenderOptions);

@@ -13,6 +13,7 @@ import { setupGlobalErrorHandlers } from '@/lib/logger';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from '@/pages/auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
+import { PlansPage } from '@/pages/plans';
 import { queryClient } from '@/services/query/client';
 import { useAuthInit } from '@/stores';
 
@@ -52,9 +53,12 @@ const router = createBrowserRouter([
         path: '/dashboard',
         element: <Dashboard />,
       },
+      {
+        path: '/plans',
+        element: <PlansPage />,
+      },
       // Future protected routes will be added here:
       // { path: '/workouts', element: <WorkoutsPage /> },
-      // { path: '/plans', element: <PlansPage /> },
       // { path: '/profile', element: <ProfilePage /> },
     ],
   },
