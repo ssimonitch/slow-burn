@@ -1,78 +1,10 @@
 /**
- * API configuration and constants
+ * Legacy API configuration - being phased out in favor of lib/api/config.ts
  */
-
-import { appConfig } from '@/config/env';
-
-/**
- * API base URL configuration
- * Defaults to localhost:8000 for development if not specified
- */
-export const API_BASE_URL = appConfig.apiBaseUrl ?? 'http://localhost:8000';
-
-/**
- * API version prefix
- */
-export const API_VERSION = '/api/v1';
-
-/**
- * Full API URL with version
- */
-export const API_URL = `${API_BASE_URL}${API_VERSION}`;
-
-/**
- * Default request timeout in milliseconds
- */
-export const DEFAULT_TIMEOUT = 30000; // 30 seconds
-
-/**
- * Default pagination limits
- */
-export const PAGINATION = {
-  DEFAULT_LIMIT: 20,
-  MAX_LIMIT: 100,
-} as const;
-
-/**
- * API endpoints configuration
- */
-export const ENDPOINTS = {
-  // Auth endpoints (for user profile only, not login/signup)
-  AUTH: {
-    ME: '/auth/me',
-  },
-
-  // Plans endpoints
-  PLANS: {
-    LIST: '/plans',
-    CREATE: '/plans',
-    GET: (id: string) => `/plans/${id}`,
-    UPDATE: (id: string) => `/plans/${id}`,
-    DELETE: (id: string) => `/plans/${id}`,
-  },
-
-  // Exercises endpoints
-  EXERCISES: {
-    LIST: '/exercises',
-    GET: (id: string) => `/exercises/${id}`,
-    SEARCH: '/exercises/search',
-  },
-
-  // Workouts endpoints
-  WORKOUTS: {
-    LOG: '/workouts/log',
-    HISTORY: '/workouts/history',
-    GET: (id: string) => `/workouts/${id}`,
-  },
-
-  // Chat endpoint
-  CHAT: {
-    SEND: '/chat',
-  },
-} as const;
 
 /**
  * HTTP status codes for consistent error handling
+ * TODO: Move consumers to import from @/lib/api/config
  */
 export const HTTP_STATUS = {
   OK: 200,
@@ -87,12 +19,4 @@ export const HTTP_STATUS = {
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
-} as const;
-
-/**
- * Content types
- */
-export const CONTENT_TYPES = {
-  JSON: 'application/json',
-  FORM_DATA: 'multipart/form-data',
 } as const;

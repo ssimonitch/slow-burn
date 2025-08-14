@@ -14,10 +14,11 @@ import createClient from 'openapi-fetch';
 import { toast } from 'sonner';
 
 import { logError, logWarn } from '@/lib/logger';
-import { API_BASE_URL } from '@/services/api/config';
 import { authService } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import type { paths } from '@/types/api.types.gen';
+
+import { API_BASE_URL } from './config';
 
 /**
  * Extended options type for middleware to include retry count

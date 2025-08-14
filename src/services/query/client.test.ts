@@ -14,10 +14,9 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createMockApiError } from '@/test/factories/api';
+import { ApiClientError } from '@/lib/api/client';
 
 import { HTTP_STATUS } from '../api/config';
-import { ApiClientError } from '../api/errors';
 import { queryClient, queryConfig } from './client';
 
 describe('Query Client Configuration', () => {
@@ -31,7 +30,9 @@ describe('Query Client Configuration', () => {
     const retryFunction = queryOptions.retry as (failureCount: number, error: unknown) => boolean;
 
     it('should not retry on auth errors (401)', () => {
-      const authError = new ApiClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED, '/protected');
+      const authError = new ApiClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED, {
+        detail: 'Authentication required',
+      });
 
       const shouldRetry = retryFunction(1, authError);
 
@@ -40,11 +41,11 @@ describe('Query Client Configuration', () => {
 
     it('should not retry on client errors except 429', () => {
       const clientErrors = [
-        new ApiClientError('Bad Request', HTTP_STATUS.BAD_REQUEST, '/api'),
-        new ApiClientError('Forbidden', HTTP_STATUS.FORBIDDEN, '/api'),
-        new ApiClientError('Not Found', HTTP_STATUS.NOT_FOUND, '/api'),
-        new ApiClientError('Conflict', HTTP_STATUS.CONFLICT, '/api'),
-        new ApiClientError('Unprocessable Entity', HTTP_STATUS.UNPROCESSABLE_ENTITY, '/api'),
+        new ApiClientError('Bad Request', HTTP_STATUS.BAD_REQUEST, { detail: 'Invalid request' }),
+        new ApiClientError('Forbidden', HTTP_STATUS.FORBIDDEN, { detail: 'Access denied' }),
+        new ApiClientError('Not Found', HTTP_STATUS.NOT_FOUND, { detail: 'Resource not found' }),
+        new ApiClientError('Conflict', HTTP_STATUS.CONFLICT, { detail: 'Resource conflict' }),
+        new ApiClientError('Unprocessable Entity', HTTP_STATUS.UNPROCESSABLE_ENTITY, { detail: 'Validation error' }),
       ];
 
       clientErrors.forEach((error) => {
@@ -54,7 +55,9 @@ describe('Query Client Configuration', () => {
     });
 
     it('should retry on 429 rate limit errors', () => {
-      const rateLimitError = new ApiClientError('Too Many Requests', HTTP_STATUS.TOO_MANY_REQUESTS, '/api');
+      const rateLimitError = new ApiClientError('Too Many Requests', HTTP_STATUS.TOO_MANY_REQUESTS, {
+        detail: 'Rate limit exceeded',
+      });
 
       const shouldRetryFirst = retryFunction(0, rateLimitError);
       const shouldRetrySecond = retryFunction(1, rateLimitError);
@@ -68,7 +71,9 @@ describe('Query Client Configuration', () => {
     });
 
     it('should retry server errors up to 3 times', () => {
-      const serverError = new ApiClientError('Internal Server Error', HTTP_STATUS.INTERNAL_SERVER_ERROR, '/api');
+      const serverError = new ApiClientError('Internal Server Error', HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+        detail: 'Server error',
+      });
 
       const shouldRetryFirst = retryFunction(0, serverError);
       const shouldRetrySecond = retryFunction(1, serverError);
@@ -82,7 +87,7 @@ describe('Query Client Configuration', () => {
     });
 
     it('should retry network errors up to 3 times', () => {
-      const networkError = new ApiClientError('Network Error', 0, '/api');
+      const networkError = new ApiClientError('Network Error', 0, { detail: 'Network connection failed' });
 
       const shouldRetryFirst = retryFunction(0, networkError);
       const shouldRetrySecond = retryFunction(1, networkError);
@@ -139,7 +144,7 @@ describe('Query Client Configuration', () => {
     const retryFunction = mutationOptions.retry as (failureCount: number, error: unknown) => boolean;
 
     it('should never retry mutations on client errors', () => {
-      const clientError = new ApiClientError('Bad Request', HTTP_STATUS.BAD_REQUEST, '/api');
+      const clientError = new ApiClientError('Bad Request', HTTP_STATUS.BAD_REQUEST, { detail: 'Invalid request' });
 
       const shouldRetry = retryFunction(0, clientError);
 
@@ -147,7 +152,9 @@ describe('Query Client Configuration', () => {
     });
 
     it('should never retry mutations on auth errors', () => {
-      const authError = new ApiClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED, '/api');
+      const authError = new ApiClientError('Unauthorized', HTTP_STATUS.UNAUTHORIZED, {
+        detail: 'Authentication required',
+      });
 
       const shouldRetry = retryFunction(0, authError);
 
@@ -155,7 +162,9 @@ describe('Query Client Configuration', () => {
     });
 
     it('should retry mutations once for server errors', () => {
-      const serverError = new ApiClientError('Internal Server Error', HTTP_STATUS.INTERNAL_SERVER_ERROR, '/api');
+      const serverError = new ApiClientError('Internal Server Error', HTTP_STATUS.INTERNAL_SERVER_ERROR, {
+        detail: 'Server error',
+      });
 
       const shouldRetryFirst = retryFunction(0, serverError);
       const shouldRetrySecond = retryFunction(1, serverError);
@@ -165,7 +174,7 @@ describe('Query Client Configuration', () => {
     });
 
     it('should retry mutations once for network errors', () => {
-      const networkError = new ApiClientError('Network Error', 0, '/api');
+      const networkError = new ApiClientError('Network Error', 0, { detail: 'Network connection failed' });
 
       const shouldRetryFirst = retryFunction(0, networkError);
       const shouldRetrySecond = retryFunction(1, networkError);
@@ -327,19 +336,19 @@ describe('Query Client Configuration', () => {
       const retryFunction = queryOptions.retry as (failureCount: number, error: unknown) => boolean;
 
       // Auth errors: Never retry (user needs to re-authenticate)
-      expect(retryFunction(1, createMockApiError('Unauthorized', 401))).toBe(false);
+      expect(retryFunction(1, new ApiClientError('Unauthorized', 401, { detail: 'Auth required' }))).toBe(false);
 
       // Validation errors: Never retry (data is invalid)
-      expect(retryFunction(1, createMockApiError('Invalid data', 422))).toBe(false);
+      expect(retryFunction(1, new ApiClientError('Invalid data', 422, { detail: 'Invalid' }))).toBe(false);
 
       // Rate limiting: Should retry (temporary limitation)
-      expect(retryFunction(1, createMockApiError('Rate limited', 429))).toBe(true);
+      expect(retryFunction(1, new ApiClientError('Rate limited', 429, { detail: 'Rate limited' }))).toBe(true);
 
       // Server errors: Should retry (might be temporary)
-      expect(retryFunction(1, createMockApiError('Server error', 500))).toBe(true);
+      expect(retryFunction(1, new ApiClientError('Server error', 500, { detail: 'Server error' }))).toBe(true);
 
       // Network errors: Should retry (connection might recover)
-      expect(retryFunction(1, createMockApiError('Network error', 0))).toBe(true);
+      expect(retryFunction(1, new ApiClientError('Network error', 0, { detail: 'Network error' }))).toBe(true);
     });
 
     it('should balance performance and data freshness requirements', () => {

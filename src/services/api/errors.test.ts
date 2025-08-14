@@ -19,7 +19,7 @@ import { logError, logWarn } from '@/lib/logger';
 import { createMockApiError, createNetworkError } from '@/test/factories/api';
 
 import { HTTP_STATUS } from './config';
-import { ApiClientError, handleApiError } from './errors';
+import { handleApiError } from './errors';
 
 // Mock the logger
 vi.mock('@/lib/logger', () => ({
@@ -379,18 +379,6 @@ describe('API Error Handling', () => {
           field: undefined,
         }),
       );
-    });
-  });
-
-  describe('backward compatibility', () => {
-    it('should export ApiClientError as alias for ApiError', () => {
-      expect(ApiClientError).toBe(ApiError);
-    });
-
-    it('should work with ApiClientError import', () => {
-      const error = new ApiClientError('Test error', HTTP_STATUS.BAD_REQUEST);
-      expect(error).toBeInstanceOf(ApiError);
-      expect(error.isClientError()).toBe(true);
     });
   });
 

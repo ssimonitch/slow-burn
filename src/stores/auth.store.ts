@@ -1,4 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js';
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 
@@ -346,10 +347,12 @@ export const useAuthInit = () => {
   const cleanup = useAuthStore((state) => state.cleanup);
   const initialized = useAuthStore((state) => state.initialized);
 
-  // Initialize on mount
-  if (!initialized) {
-    void initialize();
-  }
+  // Initialize on mount using useEffect to avoid side-effects during render
+  useEffect(() => {
+    if (!initialized) {
+      void initialize();
+    }
+  }, [initialized, initialize]);
 
   return { initialized, cleanup };
 };

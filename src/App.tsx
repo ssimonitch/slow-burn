@@ -9,7 +9,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { isDevelopment } from '@/config/env';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { setupGlobalErrorHandlers } from '@/lib/logger';
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage } from '@/pages/auth';
 import { Dashboard } from '@/pages/Dashboard';
 import { Home } from '@/pages/Home';
@@ -72,11 +71,6 @@ const router = createBrowserRouter([
 function App() {
   // Initialize auth store on app mount
   const { initialized: authInitialized, cleanup } = useAuthInit();
-
-  // Set up global error handlers on mount
-  useEffect(() => {
-    setupGlobalErrorHandlers();
-  }, []);
 
   // Cleanup auth listeners on unmount
   useEffect(() => {

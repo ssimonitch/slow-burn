@@ -67,6 +67,3 @@ function logApiError(error: ApiError, context?: Record<string, unknown>): void {
     logError('API error', error, errorContext);
   }
 }
-
-// Re-export ApiError for backward compatibility
-export { ApiError as ApiClientError };

@@ -4,7 +4,7 @@
 
 import { QueryClient } from '@tanstack/react-query';
 
-import { ApiClientError } from '@/services/api/errors';
+import { ApiClientError } from '@/lib/api/client';
 
 /**
  * Default query client configuration

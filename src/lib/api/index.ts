@@ -16,6 +16,9 @@ export { $api, default as $apiHooks } from './hooks';
 export type { ApiError, ValidationError } from './client';
 export { ApiClientError } from './client';
 
+// Configuration
+export { API_BASE_URL, API_URL, HTTP_STATUS } from './config';
+
 // Query utilities
 export { queryKeys, queryPresets, useApiCache } from './hooks';
 
