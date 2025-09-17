@@ -19,7 +19,7 @@ Non-goals (MVP): leaderboards, social, 3D form coaching, streaming voice LLM, lo
 ## 2) Component map (high-level)
 | Layer | Component | Responsibility | Notes |
 |---|---|---|---|
-| UI (Main thread) | **App Shell (React/TS, PWA)** | Views (Home, Circuits, Practice, Summary), camera permission flow, mode selection. | Service Worker caches shell+models (see §3.3). |
+| UI (Main thread) | **App Shell (React/TS, PWA)** | Views (Home, Circuits, Practice, Summary), camera permission flow, mode selection. | Service Worker caches shell+models (see §3.3); powered by React, Vite, TanStack Query, optional Zustand. |
 |  | **Event Bus** | Typed pub/sub for sparse domain events (`rep_complete`, `set_complete`, etc.). | No per-frame traffic. |
 |  | **Workout Engine (State Machine)** | Drives `idle → countdown → active_set → rest → complete`; emits side-effects. | Pure reducer + side-effect adaptors. |
 |  | **Voice Driver** | Schedules **time-based** cues (circuits) and **per‑rep** numbers (Practice). | Web Audio with recorded assets; SpeechSynthesis dev fallback; TTS provider post-MVP. |
@@ -156,6 +156,7 @@ Pre/Post → optional **Coach Talk** `/api/coach-talk` → `{message}`
 - **Tooling:** use **Supabase CLI** migrations in `/supabase/migrations` (SQL files, timestamped). 
 - **Policy:** all schema changes via migrations (no console edits); PR must include up/down SQL. 
 - **Dev seeds:** lightweight seed script for local dev; **idempotent** seeding.
+- **Service worker tooling:** generate precache/workbox bundle via Workbox CLI (or Vite plugin) to ensure model/audio assets are versioned and cached predictably.
 
 ---
 
@@ -197,9 +198,10 @@ Pre/Post → optional **Coach Talk** `/api/coach-talk` → `{message}`
 
 ---
 
-## 10) Observability (debug‑only in MVP)
-- **Local HUD (dev builds):** FPS, low‑confidence %, per‑rep latency p95, TTS blocked flag, token usage.
+## 10) Observability (debug-only in MVP)
+- **Local HUD (dev builds):** FPS, low-confidence %, per-rep latency p95, TTS blocked flag, token usage.
 - **No telemetry** shipped by default; when enabled for tuning, aggregate only.
+- **Testing stack:** unit tests with **Vitest**, component/integration with **React Testing Library**, and end-to-end smoke runs via **Playwright** before releases.
 
 ---
 
