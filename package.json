@@ -2,10 +2,19 @@
   "name": "slow-burn",
   "private": true,
   "packageManager": "pnpm@10.12.4",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "check": "pnpm lint && pnpm test"
+    "format": "pnpm --filter app exec prettier --write .",
+    "format:check": "pnpm --filter app exec prettier --check .",
+    "check": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
