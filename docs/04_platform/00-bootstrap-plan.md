@@ -7,6 +7,7 @@
 ## 2. Recommended Stack (latest stable releases)
 - React 19 + TypeScript 5 for the UI shell and component model (hooks, concurrent rendering, stable suspense APIs) ([Context7:/reactjs/react.dev]).
 - Vite 7 with the React SWC template for fast dev server, TS-first DX, and straightforward worker bundling ([Context7:/vitejs/vite]).
+- Tailwind CSS 4 (CLI + PostCSS plugin) for a utility-first design system that stays performant on mobile and integrates cleanly with Vite ([Context7:/tailwindlabs/tailwindcss.com]).
 - TanStack Query 5.8x for server-state orchestration, background refetch, and mutation flows ([Context7:/tanstack/query]).
 - Zustand 5 for optional client-side state islands (only where event log/state machine doesn’t fit) with slice pattern support ([Context7:/websites/zustand_pmnd_rs]).
 - Supabase CLI + `@supabase/supabase-js` 2.x for lightweight Postgres, migrations, and future RLS hooks ([Context7:/supabase/supabase]).
@@ -95,6 +96,7 @@ slow-burn/
 - Remove sample files (`counter.tsx`, etc.) to start from a clean shell.
 - Update `tsconfig.json` to add path aliases (`@/`) and enable `strict: true`.
 - Ensure `vite.config.ts` includes `defineConfig` with `plugins: [react()]` and plan to extend with Workbox build steps later.
+- Once dependencies are installed, add Tailwind CSS by installing `tailwindcss`, `@tailwindcss/postcss`, and `postcss` per the v4 setup guide, then create `tailwind.config.ts`, add the PostCSS plugin, and import `@import "tailwindcss";` in a global stylesheet that is pulled into `main.tsx` ([Context7:/tailwindlabs/tailwindcss.com]).
 
 ### Step 3 — Core App Wiring
 - Create `src/app/providers.tsx` to register `QueryClientProvider`, suspense boundaries, and event bus context.
@@ -104,6 +106,7 @@ slow-burn/
   ```
 - Stub top-level routes (`Home`, `Practice`, `Workout`) with placeholder screens; consider React Router later if truly needed, otherwise maintain manual view state to keep surface area narrow.
 - Establish `src/services/event-bus` with typed channels and domain events to match the specs.
+- Set up `src/app/theme.ts` (or similar) to consolidate Tailwind utility patterns and expose design tokens (spacing, color scales) so components share consistent styling primitives.
 
 ### Step 4 — State & Data Layers
 - Install later (not yet): `@tanstack/react-query`, `@tanstack/query-devtools`, `zustand` (optional). Plan selectors per Zustand docs for slices ([Context7:/websites/zustand_pmnd_rs]).

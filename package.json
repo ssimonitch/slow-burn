@@ -1,0 +1,11 @@
+{
+  "name": "slow-burn",
+  "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "check": "pnpm lint && pnpm test"
+  }
+}
