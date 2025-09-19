@@ -81,8 +81,12 @@ slow-burn/
     "workspaces": ["packages/*"],
     "scripts": {
       "lint": "pnpm -r lint",
+      "typecheck": "pnpm -r typecheck",
       "test": "pnpm -r test",
-      "check": "pnpm lint && pnpm test"
+      "format": "pnpm --filter app exec prettier --write .",
+      "format:check": "pnpm --filter app exec prettier --check .",
+      "check": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test",
+      "prepare": "husky"
     }
   }
   ```
@@ -96,10 +100,10 @@ slow-burn/
 - Remove sample files (`counter.tsx`, etc.) to start from a clean shell.
 - Update `tsconfig.json` to add path aliases (`@/`) and enable `strict: true`.
 - Ensure `vite.config.ts` includes `defineConfig` with `plugins: [react()]` and plan to extend with Workbox build steps later.
-- Once dependencies are installed, add Tailwind CSS by installing `tailwindcss`, `@tailwindcss/postcss`, and `postcss` per the v4 setup guide, then create `tailwind.config.ts`, add the PostCSS plugin, and import `@import "tailwindcss";` in a global stylesheet that is pulled into `main.tsx` ([Context7:/tailwindlabs/tailwindcss.com]).
+- Once dependencies are installed, add Tailwind CSS by installing `tailwindcss` and `@tailwindcss/postcss` per the v4 setup guide, then create `tailwind.config.ts`, add the PostCSS plugin, and import `@import "tailwindcss";` in a global stylesheet that is pulled into `main.tsx` ([Context7:/tailwindlabs/tailwindcss.com]).
 
 ### Step 3 — Core App Wiring
-- Create `src/app/providers.tsx` to register `QueryClientProvider`, suspense boundaries, and event bus context.
+- After installing TanStack Query (see Step 4), create `src/app/providers.tsx` to register `QueryClientProvider`, suspense boundaries, and event bus context.
   ```tsx
   // QueryClient usage aligns with TanStack guidance [Context7:/tanstack/query]
   import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -109,7 +113,7 @@ slow-burn/
 - Set up `src/app/theme.ts` (or similar) to consolidate Tailwind utility patterns and expose design tokens (spacing, color scales) so components share consistent styling primitives.
 
 ### Step 4 — State & Data Layers
-- Install later (not yet): `@tanstack/react-query`, `@tanstack/query-devtools`, `zustand` (optional). Plan selectors per Zustand docs for slices ([Context7:/websites/zustand_pmnd_rs]).
+- Install `@tanstack/react-query` and `@tanstack/query-devtools` now (stub the devtools import for development) and pull in `zustand` only if/when you need supplemental client state. Plan selectors per Zustand docs for slices ([Context7:/websites/zustand_pmnd_rs]).
 - Draft `src/services/supabase/client.ts` for Supabase browser client initialization, pulling anon key + URL from environment.
 - Define domain models and runtime validators (e.g., `zod`) for events, storage payloads, and Supabase tables.
 

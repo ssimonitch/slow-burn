@@ -1,21 +1,89 @@
-import { memo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+
+import { buttons, surfaces, typography } from "@/app/theme";
+import { useEventBus } from "@/services/event-bus";
+
+import type { AppScreenKey } from "./screens";
+import { HomeScreen, PracticeScreen, WorkoutScreen } from "./screens";
+import type { ScreenProps } from "./screens";
+
+const screenMap: Record<AppScreenKey, React.ComponentType<ScreenProps>> = {
+  home: HomeScreen,
+  practice: PracticeScreen,
+  workout: WorkoutScreen,
+};
 
 export const AppShell = memo(() => {
+  const [screen, setScreen] = useState<AppScreenKey>("home");
+  const [eventLog, setEventLog] = useState<string[]>([]);
+  const eventBus = useEventBus();
+
+  const timeFormatter = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { timeStyle: "medium" }),
+    [],
+  );
+
+  useEffect(() => {
+    const unsubscribeFns = [
+      eventBus.subscribe("workout:start", ({ workoutId }) => {
+        setEventLog((log) => [
+          `${timeFormatter.format(new Date())} • Workout ${workoutId.slice(0, 6)} started`,
+          ...log.slice(0, 4),
+        ]);
+      }),
+      eventBus.subscribe("workout:phase-change", ({ phase }) => {
+        setEventLog((log) => [
+          `${timeFormatter.format(new Date())} → ${phase.toUpperCase()}`,
+          ...log.slice(0, 4),
+        ]);
+      }),
+      eventBus.subscribe("workout:stop", ({ reason }) => {
+        setEventLog((log) => [
+          `${timeFormatter.format(new Date())} • Workout stopped (${reason})`,
+          ...log.slice(0, 4),
+        ]);
+      }),
+    ];
+
+    return () => {
+      unsubscribeFns.forEach((unsubscribe) => unsubscribe());
+    };
+  }, [eventBus, timeFormatter]);
+
+  const ActiveScreen = screenMap[screen];
+
   return (
     <main className="grid min-h-screen place-items-center px-6">
-      <section className="mx-auto flex max-w-md flex-col items-center gap-6 rounded-2xl bg-slate-900/60 p-8 text-center shadow-lg shadow-slate-950/40">
-        <span className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
-          Slow Burn
-        </span>
-        <div className="space-y-3">
-          <h1 className="text-3xl font-semibold leading-tight text-slate-50 sm:text-4xl">
-            HIIT companion scaffolding is ready
-          </h1>
-          <p className="text-sm text-slate-400 sm:text-base">
-            Start wiring the workout engine, pose worker, and voice driver specs
-            with confidence—tooling, linting, and formatting are all in place.
-          </p>
-        </div>
+      <section className={surfaces.panel}>
+        <span className={typography.chip}>Slow Burn</span>
+        <ActiveScreen onNavigate={setScreen} />
+        <aside className="mt-6 w-full rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-left">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Event bus
+            </h3>
+            <button
+              type="button"
+              className={buttons.subtle}
+              onClick={() => setEventLog([])}
+            >
+              Clear
+            </button>
+          </div>
+          <ul className="mt-3 space-y-2 text-left">
+            {eventLog.length === 0 ? (
+              <li className="text-xs text-slate-600">
+                Events will appear here as the workout engine fires.
+              </li>
+            ) : (
+              eventLog.map((entry, index) => (
+                <li key={index} className="text-xs text-slate-400">
+                  {entry}
+                </li>
+              ))
+            )}
+          </ul>
+        </aside>
       </section>
     </main>
   );
