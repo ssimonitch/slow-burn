@@ -132,6 +132,7 @@ slow-burn/
 - Initialize local project (`supabase init`) once Supabase CLI is ready ([Context7:/supabase/supabase]). This creates `/supabase` metadata; mirror it into `docs/04_platform` if needed.
 - Under `supabase/migrations`, create timestamped SQL migrations for the `workout_sessions`, `workout_sets`, and `companion_state` tables defined in architecture doc.
 - Add `scripts/dev-db-up.sh` to run `supabase start` when we begin local stack (guide snippet [Context7:/supabase/supabase]).
+- Follow `docs/04_platform/07-supabase-setup.md` for CLI workflow, type generation, and environment variable guidance.
 
 ### Step 8 — Testing & QA Scaffolding
 - Configure Vitest via `vitest.config.ts` with DOM environment and global test setup ([Context7:/vitest-dev/vitest]).

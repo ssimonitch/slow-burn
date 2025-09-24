@@ -12,6 +12,7 @@
     "format": "pnpm --filter app exec prettier --write .",
     "format:check": "pnpm --filter app exec prettier --check .",
     "check": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm test",
+    "supabase:types": "supabase gen types typescript --local --schema public > packages/app/src/services/supabase/types.gen.ts",
     "prepare": "husky"
   },
   "devDependencies": {
