@@ -62,7 +62,7 @@ slow-burn/
 3. Ensure Supabase CLI ≥ 1.154 is available (`brew install supabase/tap/supabase` or official installer).
 4. Confirm FFmpeg (for audio normalization scripts) and sox (optional) are installed; these will be used when populating recorded cues.
 
-### Step 1 — Initialize Monorepo Scaffolding
+### Step 1 — Initialize Monorepo Scaffolding ✅
 - Create workspace manifest:
   ```sh
   pnpm init -y
@@ -91,72 +91,43 @@ slow-burn/
   }
   ```
 
-### Step 2 — Scaffold the React PWA app
-- Use the Vite React-TS template with SWC:
-  ```sh
-  pnpm create vite@latest packages/app -- --template react-swc-ts
-  ```
-  (command per Vite guide [Context7:/vitejs/vite]).
-- Remove sample files (`counter.tsx`, etc.) to start from a clean shell.
-- Update `tsconfig.json` to add path aliases (`@/`) and enable `strict: true`.
-- Ensure `vite.config.ts` includes `defineConfig` with `plugins: [react()]` and plan to extend with Workbox build steps later.
-- Once dependencies are installed, add Tailwind CSS by installing `tailwindcss` and `@tailwindcss/postcss` per the v4 setup guide, then create `tailwind.config.ts`, add the PostCSS plugin, and import `@import "tailwindcss";` in a global stylesheet that is pulled into `main.tsx` ([Context7:/tailwindlabs/tailwindcss.com]).
+### Step 2 — Scaffold the React PWA app ✅
+- Vite React SWC template bootstrapped under `packages/app` with Tailwind 4, path aliases, and strict TS config.
+- Sample starter files removed; global stylesheet imports Tailwind.
 
-### Step 3 — Core App Wiring
-- After installing TanStack Query (see Step 4), create `src/app/providers.tsx` to register `QueryClientProvider`, suspense boundaries, and event bus context.
-  ```tsx
-  // QueryClient usage aligns with TanStack guidance [Context7:/tanstack/query]
-  import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-  ```
-- Stub top-level routes (`Home`, `Practice`, `Workout`) with placeholder screens; consider React Router later if truly needed, otherwise maintain manual view state to keep surface area narrow.
-- Establish `src/services/event-bus` with typed channels and domain events to match the specs.
-- Set up `src/app/theme.ts` (or similar) to consolidate Tailwind utility patterns and expose design tokens (spacing, color scales) so components share consistent styling primitives.
+### Step 3 — Core App Wiring ✅
+- `src/app/providers.tsx` registers QueryClient, suspense boundaries, and event bus context.
+- Placeholder routes/screens stubbed to support upcoming features.
+- Theme utilities centralised for consistent styling.
 
-### Step 4 — State & Data Layers
-- Install `@tanstack/react-query` and `@tanstack/query-devtools` now (stub the devtools import for development) and pull in `zustand` only if/when you need supplemental client state. Plan selectors per Zustand docs for slices ([Context7:/websites/zustand_pmnd_rs]).
-- Draft `src/services/supabase/client.ts` for Supabase browser client initialization, pulling anon key + URL from environment.
-- Define domain models and runtime validators (e.g., `zod`) for events, storage payloads, and Supabase tables.
+### Step 4 — State & Data Layers ✅
+- TanStack Query, devtools, and Supabase client scaffolding present.
+- Domain models/validators seeded; Zustand ready to introduce when needed.
 
-### Step 5 — Workers & Off-main-thread Assets
-- Under `src/workers`, create `pose.ts` following the contract from spec; configure Vite to treat it as a separate entry using `new Worker(new URL('./workers/pose.ts', import.meta.url), { type: 'module' })`.
-- Add helper `audio-preload.ts` worker for warming audio buffers before sessions.
-- Ensure `tsconfig.worker.json` extends base config with `lib: ["WebWorker", "WebWorker.ImportScripts", "ES2023"]` to keep types accurate.
+### Step 5 — Workers & Off-main-thread Assets ✅
+- `pose-worker` and `audio-preload` workers scaffolded under `src/workers/`.
+- `tsconfig.worker.json` updated with `lib: ["WebWorker", "WebWorker.ImportScripts", "ES2023"]`.
 
-### Step 6 — Service Worker & Workbox Integration
-- Add `src/sw/entry.ts` as Workbox entry point using `precacheAndRoute(self.__WB_MANIFEST)` and custom runtime routes (reference API signature [Context7:/googlechrome/workbox]).
-- Install and configure [`vite-plugin-pwa`](https://github.com/vite-pwa/vite-plugin-pwa) in inject-manifest mode so Vite outputs the Workbox manifest at build time (`srcDir: 'src/sw'`, `filename: 'entry.ts'`, `registerType: 'autoUpdate'`).
-- Extend plugin `workbox.globPatterns` to include audio/model assets and long-term caches; revisit once final asset layout is known.
-- Document autoplay fallback logic in voice driver (per spec) with feature detection and dev-only SpeechSynthesis fallback.
+### Step 6 — Service Worker & Workbox Integration ✅
+- `src/sw/entry.ts` created with Workbox runtime routes.
+- [`vite-plugin-pwa`](https://github.com/vite-pwa/vite-plugin-pwa) configured in inject-manifest mode; Workbox dependencies upgraded to 7.3.0.
+- Voice autoplay fallback documented in `docs/04_platform/05-worker-integration.md`.
 
-### Step 7 — Supabase Project Setup
-- Initialize local project (`supabase init`) once Supabase CLI is ready ([Context7:/supabase/supabase]). This creates `/supabase` metadata; mirror it into `docs/04_platform` if needed.
-- Under `supabase/migrations`, create timestamped SQL migrations for the `workout_sessions`, `workout_sets`, and `companion_state` tables defined in architecture doc.
-- Add `scripts/dev-db-up.sh` to run `supabase start` when we begin local stack (guide snippet [Context7:/supabase/supabase]).
-- Follow `docs/04_platform/07-supabase-setup.md` for CLI workflow, type generation, and environment variable guidance.
+### Step 7 — Supabase Project Setup ✅
+- Supabase CLI initialized locally; helper docs at `docs/04_platform/07-supabase-setup.md`.
+- Baseline migrations for `workout_sessions`, `workout_sets`, and `companion_state` committed and applied.
+- `scripts/dev-db-up.sh` and `pnpm supabase:types` added for local workflow.
 
-### Step 8 — Testing & QA Scaffolding
-- Configure Vitest via `vitest.config.ts` with DOM environment and global test setup ([Context7:/vitest-dev/vitest]).
-- Add `src/test/setup.ts` to register `@testing-library/jest-dom` matchers.
-- Create Playwright config in `packages/app/tests/e2e/playwright.config.ts`; include mobile viewports and service worker enablement. Install instructions reference `@playwright/test` usage ([Context7:/microsoft/playwright]).
-- Add root scripts:
-  ```json
-  {
-    "scripts": {
-      "test:unit": "pnpm --filter app vitest",
-      "test:e2e": "pnpm --filter app playwright test"
-    }
-  }
-  ```
+### Step 8 — Testing & QA Scaffolding (in progress)
+- Vitest configuration and test setup are in place. Deferred tasks:
+  - Playwright installation and e2e scaffolding (wait for UI flows).
+  - CI wiring for Playwright runs.
 
-### Step 9 — Audio & Asset Pipeline
-- Define naming convention in `packages/app/public/audio/README.md` (e.g., `phase__language__voice__variant.mp3`).
-- Include script placeholder in `scripts/ingest-audio.ts` to copy mastered MP3/WAV files into `public/audio` and update manifest.
-- Plan Workbox precache include/exclude for audio to avoid repeated network hits.
+### Step 9 — Audio & Asset Pipeline (deferred)
+- Pending audio asset drop. To revisit: naming convention README, ingest script, Workbox precache tuning.
 
-### Step 10 — CI/CD & Tooling Hooks
-- Add `.github/workflows/ci.yml` (later) running lint, vitest, playwright (under `--ui false`).
-- Consider Turborepo or `pnpm recursive` for caching once tasks exist.
-- Document environment variables required: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_VOICE_CDN_BASE` (for remote audio later), etc.
+### Step 10 — CI/CD & Tooling Hooks (deferred)
+- GitHub Actions workflow, caching strategy, and environment variable documentation planned once tests stabilize.
 
 ## 5. Post-Scaffold Next Actions
 1. Implement the workout engine reducer and event bus wiring per spec before touching pose logic.
