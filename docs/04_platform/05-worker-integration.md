@@ -46,3 +46,15 @@
 - Decide final ownership of worker handles (likely a dedicated provider under `@/features/workout-engine`).
 - Add Vitest coverage for worker message guards and lifecycle helpers once UI infrastructure lands.
 - Verify Workbox precaches model/audio assets to match worker default paths.
+
+## 4. Voice Driver Autoplay Fallback Plan
+- Detect autoplay support by attempting a muted `AudioContext` resume when the practice shell mounts; if it rejects, surface a UI nudge requesting a tap to unlock audio.
+- When autoplay is blocked, fall back to the SpeechSynthesis-based narrator described in `docs/01_system/11-event-loop-spec.md` for dev/test toggling.
+- Gate the SpeechSynthesis path behind a dev flag (`import.meta.env.DEV`) so production keeps the prerecorded prompts.
+- Cache the unlock resolution in session state so we only prompt once per visit.
+
+## 5. Service Worker Registration & Build Hook
+- The app shell (e.g. `src/app/AppShell.tsx`) should `import { registerSW } from 'virtual:pwa-register'` and call it on mount with `immediate: true` so updates download as soon as new builds ship.
+- Expose update notifications through the app’s global toast/notification system (listen for `onNeedRefresh` from the registration helper).
+- Keep `devOptions.enabled` in the `vite-plugin-pwa` config while the shell is under active development; disable before shipping if it causes DX conflicts.
+- Update release documentation to include `pnpm --filter app build` → `pnpm --filter app preview` smoke test with the PWA plugin enabled.

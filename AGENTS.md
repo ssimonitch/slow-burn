@@ -32,3 +32,4 @@
 - Vite reads environment variables from `.env*` files inside `packages/app`; prefix client-exposed values with `VITE_` and restart the dev server after edits.
 - `src/app/AppShell.tsx` bootstraps the UI. Prefer composing feature-specific screens under `src/features` and keep the shell lean.
 - Because TypeScript project references tie tooling together, rerun `pnpm --filter app build` if you modify the TypeScript config files.
+- When adding or upgrading dependencies, prefer the latest stable release. Check the upstream repo (tags/releases or npm) for the current version and read release notes for breaking changes or security fixes before pinning a lower version.

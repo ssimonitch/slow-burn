@@ -124,7 +124,8 @@ slow-burn/
 
 ### Step 6 — Service Worker & Workbox Integration
 - Add `src/sw/entry.ts` as Workbox entry point using `precacheAndRoute(self.__WB_MANIFEST)` and custom runtime routes (reference API signature [Context7:/googlechrome/workbox]).
-- Plan to integrate `workbox-build` in a Vite plugin or post-build script to inject precache manifest for audio/model assets without shipping entire `public/` folder unversioned.
+- Install and configure [`vite-plugin-pwa`](https://github.com/vite-pwa/vite-plugin-pwa) in inject-manifest mode so Vite outputs the Workbox manifest at build time (`srcDir: 'src/sw'`, `filename: 'entry.ts'`, `registerType: 'autoUpdate'`).
+- Extend plugin `workbox.globPatterns` to include audio/model assets and long-term caches; revisit once final asset layout is known.
 - Document autoplay fallback logic in voice driver (per spec) with feature detection and dev-only SpeechSynthesis fallback.
 
 ### Step 7 — Supabase Project Setup
