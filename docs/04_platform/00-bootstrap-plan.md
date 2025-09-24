@@ -38,7 +38,7 @@ slow-burn/
 │  │  │  │  ├─ storage/
 │  │  │  │  └─ supabase/
 │  │  │  ├─ workers/
-│  │  │  │  ├─ pose-worker.ts
+│  │  │  │  ├─ pose.ts
 │  │  │  │  └─ audio-preload.ts
 │  │  │  ├─ sw/             # Custom service worker entry for Workbox injection
 │  │  │  └─ test/           # Component/unit specs (Vitest)
@@ -118,7 +118,7 @@ slow-burn/
 - Define domain models and runtime validators (e.g., `zod`) for events, storage payloads, and Supabase tables.
 
 ### Step 5 — Workers & Off-main-thread Assets
-- Under `src/workers`, create `pose-worker.ts` following the contract from spec; configure Vite to treat it as a separate entry using `new Worker(new URL('./workers/pose-worker.ts', import.meta.url), { type: 'module' })`.
+- Under `src/workers`, create `pose.ts` following the contract from spec; configure Vite to treat it as a separate entry using `new Worker(new URL('./workers/pose.ts', import.meta.url), { type: 'module' })`.
 - Add helper `audio-preload.ts` worker for warming audio buffers before sessions.
 - Ensure `tsconfig.worker.json` extends base config with `lib: ["WebWorker", "WebWorker.ImportScripts", "ES2023"]` to keep types accurate.
 

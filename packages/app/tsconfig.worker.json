@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "lib": ["WebWorker", "WebWorker.ImportScripts", "ES2023"],
+    "types": [],
+    "noEmit": false,
+    "outDir": "./node_modules/.tmp/workers"
+  },
+  "include": ["src/workers/**/*.ts"],
+  "exclude": ["src/workers/**/*.test.ts"]
+}
