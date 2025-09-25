@@ -1,20 +1,10 @@
-import {
-  createContext,
-  createElement,
-  useContext,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, createElement, useContext, useEffect, useMemo, type ReactNode } from 'react';
 
-import type { AppEventKey, AppEventListener, AppEventMap } from "./types";
+import type { AppEventKey, AppEventListener, AppEventMap } from './types';
 
 export interface EventBus {
   emit<K extends AppEventKey>(key: K, payload: AppEventMap[K]): void;
-  subscribe<K extends AppEventKey>(
-    key: K,
-    listener: AppEventListener<K>,
-  ): () => void;
+  subscribe<K extends AppEventKey>(key: K, listener: AppEventListener<K>): () => void;
 }
 
 function createEventBus(): EventBus {
@@ -52,16 +42,13 @@ export function EventBusProvider({ children }: { children: ReactNode }) {
 export function useEventBus() {
   const bus = useContext(EventBusContext);
   if (!bus) {
-    throw new Error("useEventBus must be used within an EventBusProvider");
+    throw new Error('useEventBus must be used within an EventBusProvider');
   }
 
   return bus;
 }
 
-export function useEventSubscription<K extends AppEventKey>(
-  key: K,
-  listener: AppEventListener<K>,
-) {
+export function useEventSubscription<K extends AppEventKey>(key: K, listener: AppEventListener<K>) {
   const bus = useEventBus();
 
   useEffect(() => bus.subscribe(key, listener), [bus, key, listener]);

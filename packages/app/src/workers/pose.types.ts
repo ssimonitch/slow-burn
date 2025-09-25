@@ -9,10 +9,10 @@ export type PoseWorkerCommand =
   | PoseWorkerConfigCommand
   | PoseWorkerStopCommand;
 
-export type PoseWorkerCommandType = PoseWorkerCommand["type"];
+export type PoseWorkerCommandType = PoseWorkerCommand['type'];
 
 export interface PoseWorkerInitCommand {
-  type: "INIT";
+  type: 'INIT';
   model: PoseModelId;
   modelBaseUrl?: string;
   modelVersion?: string;
@@ -21,19 +21,19 @@ export interface PoseWorkerInitCommand {
 }
 
 export interface PoseWorkerFrameCommand {
-  type: "FRAME";
+  type: 'FRAME';
   bitmap: ImageBitmap;
   ts: number;
 }
 
 export interface PoseWorkerFrameImageDataCommand {
-  type: "FRAME_IMAGE_DATA";
+  type: 'FRAME_IMAGE_DATA';
   imageData: ImageData;
   ts: number;
 }
 
 export interface PoseWorkerConfigCommand {
-  type: "CONFIG";
+  type: 'CONFIG';
   TH_CONF?: number;
   DEBOUNCE_MS?: number;
   THETA_DOWN_DEG?: number;
@@ -45,7 +45,7 @@ export interface PoseWorkerConfigCommand {
 }
 
 export interface PoseWorkerStopCommand {
-  type: "STOP";
+  type: 'STOP';
 }
 
 export interface PoseWorkerConfig {
@@ -76,7 +76,7 @@ export type TargetFps = (typeof TARGET_FPS_OPTIONS)[number];
 
 export const DEFAULT_TARGET_FPS: TargetFps = 24;
 
-export type PoseModelId = "movenet_singlepose_lightning";
+export type PoseModelId = 'movenet_singlepose_lightning';
 
 export type PoseWorkerEvent =
   | PoseWorkerRepCompleteEvent
@@ -87,81 +87,74 @@ export type PoseWorkerEvent =
   | PoseWorkerErrorEvent
   | PoseWorkerDebugMetricsEvent;
 
-export type PoseWorkerEventType = PoseWorkerEvent["type"];
+export type PoseWorkerEventType = PoseWorkerEvent['type'];
 
 export interface PoseWorkerRepCompleteEvent {
-  type: "REP_COMPLETE";
+  type: 'REP_COMPLETE';
   ts: number;
-  exercise: "squat";
+  exercise: 'squat';
   confidence: number;
   fps?: number;
 }
 
 export interface PoseWorkerPoseLostEvent {
-  type: "POSE_LOST";
+  type: 'POSE_LOST';
   ts: number;
 }
 
 export interface PoseWorkerPoseRegainedEvent {
-  type: "POSE_REGAINED";
+  type: 'POSE_REGAINED';
   ts: number;
 }
 
 export interface PoseWorkerHeartbeatEvent {
-  type: "HEARTBEAT";
+  type: 'HEARTBEAT';
   ts: number;
   fps?: number;
   backend?: PoseBackend;
 }
 
 export interface PoseWorkerIdleEvent {
-  type: "WORKER_IDLE";
+  type: 'WORKER_IDLE';
   ts: number;
 }
 
 export interface PoseWorkerErrorEvent {
-  type: "ERROR";
+  type: 'ERROR';
   ts: number;
   code: PoseWorkerErrorCode;
   message?: string;
 }
 
 export interface PoseWorkerDebugMetricsEvent {
-  type: "DEBUG_METRICS";
+  type: 'DEBUG_METRICS';
   ts: number;
   theta?: number;
   state?: PoseWorkerPhaseState;
   valid?: boolean;
 }
 
-export type PoseWorkerPhaseState = "NO_POSE" | "UP" | "DOWN";
+export type PoseWorkerPhaseState = 'NO_POSE' | 'UP' | 'DOWN';
 
-export type PoseWorkerErrorCode =
-  | "MODEL_LOAD"
-  | "FRAME_DECODE"
-  | "FRAME_NOT_SUPPORTED"
-  | "BACKEND_INIT"
-  | "INTERNAL";
+export type PoseWorkerErrorCode = 'MODEL_LOAD' | 'FRAME_DECODE' | 'FRAME_NOT_SUPPORTED' | 'BACKEND_INIT' | 'INTERNAL';
 
-export type PoseBackend = "webgpu" | "webgl" | "wasm";
+export type PoseBackend = 'webgpu' | 'webgl' | 'wasm';
 
-export function isPoseWorkerCommand(
-  value: unknown,
-): value is PoseWorkerCommand {
+export function isPoseWorkerCommand(value: unknown): value is PoseWorkerCommand {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "type" in value &&
-    typeof (value as { type: unknown }).type === "string"
+    'type' in value &&
+    typeof (value as { type: unknown }).type === 'string'
   );
 }
 
 export function isPoseWorkerEvent(value: unknown): value is PoseWorkerEvent {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "type" in value &&
-    typeof (value as { type: unknown }).type === "string"
+    'type' in value &&
+    typeof (value as { type: unknown }).type === 'string'
   );
 }
 

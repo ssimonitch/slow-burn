@@ -1,9 +1,7 @@
-export type AudioPreloadCommand =
-  | AudioPreloadRequestCommand
-  | AudioPreloadAbortCommand;
+export type AudioPreloadCommand = AudioPreloadRequestCommand | AudioPreloadAbortCommand;
 
 export interface AudioPreloadRequestCommand {
-  type: "AUDIO_PRELOAD";
+  type: 'AUDIO_PRELOAD';
   id: string;
   urls: string[];
   /**
@@ -13,35 +11,32 @@ export interface AudioPreloadRequestCommand {
 }
 
 export interface AudioPreloadAbortCommand {
-  type: "AUDIO_PRELOAD_ABORT";
+  type: 'AUDIO_PRELOAD_ABORT';
   /**
    * Abort a specific preload request. When omitted, all active requests stop.
    */
   id?: string;
 }
 
-export type AudioPreloadEvent =
-  | AudioPreloadProgressEvent
-  | AudioPreloadCompleteEvent
-  | AudioPreloadAbortedEvent;
+export type AudioPreloadEvent = AudioPreloadProgressEvent | AudioPreloadCompleteEvent | AudioPreloadAbortedEvent;
 
 export interface AudioPreloadProgressEvent {
-  type: "AUDIO_PRELOAD_PROGRESS";
+  type: 'AUDIO_PRELOAD_PROGRESS';
   id: string;
   url: string;
-  status: "loaded" | "error";
+  status: 'loaded' | 'error';
   error?: string;
 }
 
 export interface AudioPreloadCompleteEvent {
-  type: "AUDIO_PRELOAD_COMPLETE";
+  type: 'AUDIO_PRELOAD_COMPLETE';
   id: string;
   loaded: string[];
   failed: AudioPreloadFailure[];
 }
 
 export interface AudioPreloadAbortedEvent {
-  type: "AUDIO_PRELOAD_ABORTED";
+  type: 'AUDIO_PRELOAD_ABORTED';
   id: string;
 }
 
@@ -50,13 +45,11 @@ export interface AudioPreloadFailure {
   readonly error: string;
 }
 
-export function isAudioPreloadCommand(
-  value: unknown,
-): value is AudioPreloadCommand {
+export function isAudioPreloadCommand(value: unknown): value is AudioPreloadCommand {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "type" in value &&
-    typeof (value as { type: unknown }).type === "string"
+    'type' in value &&
+    typeof (value as { type: unknown }).type === 'string'
   );
 }

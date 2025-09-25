@@ -13,7 +13,7 @@ import {
   type PoseWorkerPhaseState,
   type PoseWorkerErrorCode,
   type TargetFps,
-} from "./pose.types";
+} from './pose.types';
 
 const HEARTBEAT_MIN_INTERVAL_MS = 1000;
 const WORKER_IDLE_TIMEOUT_MS = 2000;
@@ -44,23 +44,23 @@ interface SquatDetectionState {
 let workerState: WorkerRuntimeState = createInitialState();
 let idleTimeoutId: number | undefined;
 
-self.addEventListener("message", async (event) => {
+self.addEventListener('message', async (event) => {
   const message = event.data as PoseWorkerCommand;
 
   switch (message.type) {
-    case "INIT":
+    case 'INIT':
       await handleInit(message);
       break;
-    case "FRAME":
+    case 'FRAME':
       await handleFrame(message);
       break;
-    case "FRAME_IMAGE_DATA":
+    case 'FRAME_IMAGE_DATA':
       await handleFrameImageData(message);
       break;
-    case "CONFIG":
+    case 'CONFIG':
       handleConfig(message);
       break;
-    case "STOP":
+    case 'STOP':
       handleStop();
       break;
     default:
@@ -93,13 +93,13 @@ async function handleFrame(command: PoseWorkerFrameCommand) {
     // TODO: implement model inference against ImageBitmap.
 
     emitDebug({
-      type: "DEBUG_METRICS",
+      type: 'DEBUG_METRICS',
       ts: command.ts,
       state: workerState.squat.phase,
       valid: false,
     });
   } catch (unknownError) {
-    postError("FRAME_DECODE", unknownError, command.ts);
+    postError('FRAME_DECODE', unknownError, command.ts);
   } finally {
     command.bitmap.close();
     workerState = { ...workerState, processing: false };
@@ -119,13 +119,13 @@ async function handleFrameImageData(command: PoseWorkerFrameImageDataCommand) {
     // TODO: convert ImageData to tensor and perform inference.
 
     emitDebug({
-      type: "DEBUG_METRICS",
+      type: 'DEBUG_METRICS',
       ts: command.ts,
       state: workerState.squat.phase,
       valid: false,
     });
   } catch (unknownError) {
-    postError("FRAME_DECODE", unknownError, command.ts);
+    postError('FRAME_DECODE', unknownError, command.ts);
   } finally {
     workerState = { ...workerState, processing: false };
     postHeartbeat(command.ts);
@@ -214,7 +214,7 @@ function emitIdle(frameTs: number) {
   }
 
   emit({
-    type: "WORKER_IDLE",
+    type: 'WORKER_IDLE',
     ts: frameTs,
   });
 }
@@ -222,10 +222,7 @@ function emitIdle(frameTs: number) {
 function postHeartbeat(frameTs: number) {
   const now = performance.now();
 
-  if (
-    workerState.heartbeatLastSentAt != null &&
-    now - workerState.heartbeatLastSentAt < HEARTBEAT_MIN_INTERVAL_MS
-  ) {
+  if (workerState.heartbeatLastSentAt != null && now - workerState.heartbeatLastSentAt < HEARTBEAT_MIN_INTERVAL_MS) {
     return;
   }
 
@@ -234,7 +231,7 @@ function postHeartbeat(frameTs: number) {
     : undefined;
 
   emit({
-    type: "HEARTBEAT",
+    type: 'HEARTBEAT',
     ts: frameTs,
     backend: workerState.backend,
     fps,
@@ -248,40 +245,38 @@ function postHeartbeat(frameTs: number) {
 
 function postError(code: PoseWorkerErrorCode, error: unknown, frameTs: number) {
   emit({
-    type: "ERROR",
+    type: 'ERROR',
     ts: frameTs,
     code,
     message: error instanceof Error ? error.message : undefined,
   });
 }
 
-function resolveConfigPatch(
-  command: PoseWorkerConfigCommand,
-): Partial<PoseWorkerConfig> | null {
+function resolveConfigPatch(command: PoseWorkerConfigCommand): Partial<PoseWorkerConfig> | null {
   const patch: Partial<PoseWorkerConfig> = {};
 
-  if (typeof command.TH_CONF === "number") {
+  if (typeof command.TH_CONF === 'number') {
     patch.keypointConfidenceThreshold = command.TH_CONF;
   }
-  if (typeof command.DEBOUNCE_MS === "number") {
+  if (typeof command.DEBOUNCE_MS === 'number') {
     patch.debounceMs = command.DEBOUNCE_MS;
   }
-  if (typeof command.MIN_DOWN_HOLD_MS === "number") {
+  if (typeof command.MIN_DOWN_HOLD_MS === 'number') {
     patch.minDownHoldMs = command.MIN_DOWN_HOLD_MS;
   }
-  if (typeof command.THETA_DOWN_DEG === "number") {
+  if (typeof command.THETA_DOWN_DEG === 'number') {
     patch.thetaDownDegrees = command.THETA_DOWN_DEG;
   }
-  if (typeof command.THETA_UP_DEG === "number") {
+  if (typeof command.THETA_UP_DEG === 'number') {
     patch.thetaUpDegrees = command.THETA_UP_DEG;
   }
-  if (typeof command.POSE_LOST_TIMEOUT_MS === "number") {
+  if (typeof command.POSE_LOST_TIMEOUT_MS === 'number') {
     patch.poseLostTimeoutMs = command.POSE_LOST_TIMEOUT_MS;
   }
-  if (typeof command.EMA_ALPHA === "number") {
+  if (typeof command.EMA_ALPHA === 'number') {
     patch.emaAlpha = command.EMA_ALPHA;
   }
-  if (typeof command.SINGLE_SIDE_PENALTY === "number") {
+  if (typeof command.SINGLE_SIDE_PENALTY === 'number') {
     patch.singleSidePenalty = command.SINGLE_SIDE_PENALTY;
   }
 
@@ -324,7 +319,7 @@ function createInitialState(): WorkerRuntimeState {
     modelWarm: false,
     debugMetricsLastSentAt: undefined,
     squat: {
-      phase: "NO_POSE",
+      phase: 'NO_POSE',
       downHoldStartedAt: undefined,
       lastValidPoseTs: undefined,
       lastRepTs: undefined,

@@ -5,7 +5,7 @@ import type {
   WorkoutSessionRow,
   WorkoutSetInsert,
   WorkoutSetRow,
-} from "@/lib/schemas/storage";
+} from '@/lib/schemas/storage';
 
 export type Database = {
   public: {

@@ -1,13 +1,13 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 
-import "./index.css";
-import { AppProviders, AppShell } from "@/app";
+import './index.css';
+import { AppProviders, AppShell } from '@/app';
 
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  throw new Error("Hydration root not found");
+  throw new Error('Hydration root not found');
 }
 
 createRoot(rootElement).render(

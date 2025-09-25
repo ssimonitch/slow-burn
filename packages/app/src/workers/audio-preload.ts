@@ -4,19 +4,19 @@ import type {
   AudioPreloadEvent,
   AudioPreloadFailure,
   AudioPreloadRequestCommand,
-} from "./audio-preload.types";
+} from './audio-preload.types';
 
 const inflightControllers = new Map<string, Map<string, AbortController>>();
 const abortedIds = new Set<string>();
 
-self.addEventListener("message", (event) => {
+self.addEventListener('message', (event) => {
   const message = event.data as AudioPreloadCommand;
 
   switch (message.type) {
-    case "AUDIO_PRELOAD":
+    case 'AUDIO_PRELOAD':
       void handlePreload(message);
       break;
-    case "AUDIO_PRELOAD_ABORT":
+    case 'AUDIO_PRELOAD_ABORT':
       handleAbort(message);
       break;
     default:
@@ -29,7 +29,7 @@ async function handlePreload(command: AudioPreloadRequestCommand) {
 
   if (uniqueUrls.length === 0) {
     postMessageToClient({
-      type: "AUDIO_PRELOAD_COMPLETE",
+      type: 'AUDIO_PRELOAD_COMPLETE',
       id: command.id,
       loaded: [],
       failed: [],
@@ -67,10 +67,10 @@ async function handlePreload(command: AudioPreloadRequestCommand) {
 
         loaded.push(url);
         postMessageToClient({
-          type: "AUDIO_PRELOAD_PROGRESS",
+          type: 'AUDIO_PRELOAD_PROGRESS',
           id: command.id,
           url,
-          status: "loaded",
+          status: 'loaded',
         });
       } catch (error) {
         if (controller.signal.aborted) {
@@ -85,10 +85,10 @@ async function handlePreload(command: AudioPreloadRequestCommand) {
         });
 
         postMessageToClient({
-          type: "AUDIO_PRELOAD_PROGRESS",
+          type: 'AUDIO_PRELOAD_PROGRESS',
           id: command.id,
           url,
-          status: "error",
+          status: 'error',
           error: message,
         });
       } finally {
@@ -102,14 +102,14 @@ async function handlePreload(command: AudioPreloadRequestCommand) {
   if (abortedIds.has(command.id)) {
     abortedIds.delete(command.id);
     postMessageToClient({
-      type: "AUDIO_PRELOAD_ABORTED",
+      type: 'AUDIO_PRELOAD_ABORTED',
       id: command.id,
     });
     return;
   }
 
   postMessageToClient({
-    type: "AUDIO_PRELOAD_COMPLETE",
+    type: 'AUDIO_PRELOAD_COMPLETE',
     id: command.id,
     loaded,
     failed,

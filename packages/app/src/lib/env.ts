@@ -1,13 +1,9 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const supabaseEnvSchema = z
   .object({
-    VITE_SUPABASE_URL: z
-      .string()
-      .url({ message: "VITE_SUPABASE_URL must be a valid URL" }),
-    VITE_SUPABASE_ANON_KEY: z
-      .string()
-      .min(1, { message: "VITE_SUPABASE_ANON_KEY is required" }),
+    VITE_SUPABASE_URL: z.string().url({ message: 'VITE_SUPABASE_URL must be a valid URL' }),
+    VITE_SUPABASE_ANON_KEY: z.string().min(1, { message: 'VITE_SUPABASE_ANON_KEY is required' }),
   })
   .passthrough();
 
@@ -20,15 +16,13 @@ export function resolveSupabaseEnv(): SupabaseEnvConfig {
   const result = supabaseEnvSchema.safeParse(import.meta.env);
 
   if (!result.success) {
-    const issues = result.error.issues
-      .map((issue) => `• ${issue.message}`)
-      .join("\n");
+    const issues = result.error.issues.map((issue) => `• ${issue.message}`).join('\n');
     throw new Error(
       [
-        "Supabase configuration missing or invalid.",
-        "Provide VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in packages/app/.env.local",
+        'Supabase configuration missing or invalid.',
+        'Provide VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in packages/app/.env.local',
         issues,
-      ].join("\n"),
+      ].join('\n'),
     );
   }
 

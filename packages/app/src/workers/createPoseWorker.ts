@@ -1,19 +1,17 @@
-import type { PoseWorkerCommand, PoseWorkerEvent } from "./pose.types";
+import type { PoseWorkerCommand, PoseWorkerEvent } from './pose.types';
 
 export interface PoseWorkerHandle {
   readonly worker: Worker;
   postMessage:
     | ((message: PoseWorkerCommand) => void)
     | ((message: PoseWorkerCommand, transfer: Transferable[]) => void);
-  addMessageListener(
-    listener: (event: MessageEvent<PoseWorkerEvent>) => void,
-  ): () => void;
+  addMessageListener(listener: (event: MessageEvent<PoseWorkerEvent>) => void): () => void;
   terminate(): void;
 }
 
 export function createPoseWorker(): PoseWorkerHandle {
-  const worker = new Worker(new URL("./pose.ts", import.meta.url), {
-    type: "module",
+  const worker = new Worker(new URL('./pose.ts', import.meta.url), {
+    type: 'module',
   });
 
   function postMessage(message: PoseWorkerCommand, transfer?: Transferable[]) {
@@ -24,13 +22,11 @@ export function createPoseWorker(): PoseWorkerHandle {
     }
   }
 
-  function addMessageListener(
-    listener: (event: MessageEvent<PoseWorkerEvent>) => void,
-  ) {
+  function addMessageListener(listener: (event: MessageEvent<PoseWorkerEvent>) => void) {
     const wrapped = listener as EventListener;
-    worker.addEventListener("message", wrapped);
+    worker.addEventListener('message', wrapped);
 
-    return () => worker.removeEventListener("message", wrapped);
+    return () => worker.removeEventListener('message', wrapped);
   }
 
   return {

@@ -45,10 +45,9 @@ slow-burn/
 │  │  └─ tests/
 │  │     ├─ e2e/            # Playwright specs + fixtures
 │  │     └─ fixtures/
-│  └─ infra/
-│     └─ supabase/          # CLI config, migrations, seeds
+│  └─ infra/                # Reserved for non-CLI infrastructure (e.g., Terraform) — optional
 ├─ scripts/                 # CI helpers, audio ingestion, build scripts
-├─ supabase/                # (Supabase CLI default when initialized)
+├─ supabase/                # Supabase CLI project (config, migrations, seeds)
 ├─ package.json             # Workspaces + shared scripts
 ├─ pnpm-workspace.yaml      # Workspace declarations (if pnpm)
 └─ turbo.json               # Optional task runner (future)

@@ -1,11 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-import {
-  exerciseSchema,
-  setCompleteReasonSchema,
-  targetTypeSchema,
-  workoutModeSchema,
-} from "./events";
+import { exerciseSchema, setCompleteReasonSchema, targetTypeSchema, workoutModeSchema } from './events';
 
 export const uuidSchema = z.string().uuid();
 

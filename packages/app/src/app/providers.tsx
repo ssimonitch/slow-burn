@@ -1,8 +1,9 @@
-import { Suspense, type PropsWithChildren } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Suspense, type PropsWithChildren } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-import { EventBusProvider } from "@/services/event-bus";
+import { EventBusProvider } from '@/services/event-bus';
+import { WorkoutEngineRuntimeBridge } from '@/features/workout-engine';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,11 +18,10 @@ const queryClient = new QueryClient({
 export function AppProviders({ children }: PropsWithChildren<unknown>) {
   return (
     <EventBusProvider>
+      <WorkoutEngineRuntimeBridge />
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={null}>{children}</Suspense>
-        {import.meta.env.DEV ? (
-          <ReactQueryDevtools buttonPosition="bottom-left" />
-        ) : null}
+        {import.meta.env.DEV ? <ReactQueryDevtools buttonPosition="bottom-left" /> : null}
       </QueryClientProvider>
     </EventBusProvider>
   );

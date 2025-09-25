@@ -1,8 +1,8 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-import { resolveSupabaseEnv } from "@/lib/env";
+import { resolveSupabaseEnv } from '@/lib/env';
 
-import type { Database } from "./types";
+import type { Database } from './types';
 
 const globalClient = globalThis as typeof globalThis & {
   __supabaseClient?: SupabaseClient<Database>;

@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
     "preview": "vite preview",
+    "lint": "eslint --format stylish . --cache --cache-strategy content",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest --watch"
   },

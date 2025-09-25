@@ -1,20 +1,20 @@
-export type WorkoutPhase =
-  | "idle"
-  | "countdown"
-  | "active"
-  | "rest"
-  | "complete";
+import type { EngineCommand, EngineEvent } from '@/features/workout-engine/core';
+import type { PoseWorkerEvent } from '@/workers';
 
 export type AppEventMap = {
-  "workout:start": { workoutId: string };
-  "workout:phase-change": { phase: WorkoutPhase; timestamp: number };
-  "workout:stop": { reason: "user" | "pose-lost" | "error" };
-  "rep:complete": { exercise: string; count: number; timestamp: number };
+  'engine:command': EngineCommand;
+  'engine:event': EngineEvent;
+  'pose:event': PoseWorkerEvent;
+  'pose:command': PoseAdapterCommand;
+  'debug:log': { message: string; ts: number; source?: string };
 };
+
+export type PoseAdapterCommand =
+  | { type: 'FAKE_REP' }
+  | { type: 'FAKE_STREAM_START'; intervalMs?: number }
+  | { type: 'FAKE_STREAM_STOP' };
 
 export type AppEventKey = keyof AppEventMap;
 export type AppEventPayload<K extends AppEventKey> = AppEventMap[K];
 
-export type AppEventListener<K extends AppEventKey> = (
-  payload: AppEventPayload<K>,
-) => void;
+export type AppEventListener<K extends AppEventKey> = (payload: AppEventPayload<K>) => void;
