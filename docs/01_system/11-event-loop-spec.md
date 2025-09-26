@@ -82,15 +82,24 @@ interface BaseEvent {
 // pre-set countdown (3..2..1)
 { type: 'COUNTDOWN_TICK', ts, seq, source:'timer', seconds_left: 3 | 2 | 1 }
 
+// workout starts (emitted once per session)
+{ type: 'WORKOUT_STARTED', ts, seq, source:'engine',
+  session_id: string,
+  mode: 'circuit' | 'practice',
+  started_at: number // ms since sessionStartTs (mirrors ts)
+}
+
 // set begins
 { type: 'SET_STARTED', ts, seq, source:'engine',
+  session_id: string,
   mode: 'circuit' | 'practice',
   exercise: Exercise,
   target_type: 'time' | 'reps',
-  goal_value: number | null, // seconds for time; null for Practice AMRAP
-  max_duration_sec?: number,  // Practice only; default 300 (safety cap)
-  slot_index?: number,        // 1..7 for circuit EMOM-7
-  round?: number              // reserved
+  goal_value: number | null,   // seconds for time; null for Practice AMRAP
+  started_at: number,
+  max_duration_sec?: number,   // Practice safety cap
+  slot_index?: number,         // 1..7 for circuit EMOM-7
+  round?: number               // reserved
 }
 
 // 1 Hz interval tick during active set (Circuit only)
@@ -101,19 +110,29 @@ interface BaseEvent {
 
 // set ends
 { type: 'SET_COMPLETE', ts, seq, source:'engine',
+  session_id: string,
   mode: 'circuit' | 'practice',
   exercise: Exercise,
   target_type: 'time' | 'reps',
-  actual_reps: number,       // 0 when rep counting is not implemented for this exercise (MVP: all non‑squat timed moves)
-  duration_sec: number,      // actual elapsed secs in set
+  goal_value: number | null,
+  actual_reps: number,        // 0 when rep counting is not implemented for this exercise (MVP: all non‑squat timed moves)
+  duration_sec: number,       // actual elapsed secs in set
   reason: 'time' | 'goal' | 'user_stop' | 'error'
 }
 
-// workout ends
+// workout ends (happy path)
 { type: 'WORKOUT_COMPLETE', ts, seq, source:'engine',
+  session_id: string,
   total_reps: number,
   duration_sec: number,
-  sets: Array<{ exercise: Exercise; target_type: 'time'|'reps'; actual_reps: number; duration_sec: number; }>
+}
+
+// workout ends (user stop / error)
+{ type: 'WORKOUT_STOPPED', ts, seq, source:'engine',
+  session_id: string,
+  total_reps: number,
+  duration_sec: number,
+  reason: 'user' | 'pose-lost' | 'error'
 }
 ```
 
@@ -187,10 +206,10 @@ States: `idle → countdown → active_set → rest → complete` (+ `paused` ov
 - **Autoplay:** must be primed by user tap; if blocked → show visual cues + optional vibration.
 
 ### 6.2 Storage Adapter
-- **Buffer-first:** accumulate events in-memory during session (cap below).
+- **Events-as-source-of-truth:** adapters now read only `engine:event` payloads; commands are not required for persistence.
 - **Flush on boundaries:**
-  - On `SET_COMPLETE` → write one `workout_sets` row.
-  - On `WORKOUT_COMPLETE` → write `workout_sessions` row + update `companion_state` (XP/level) **atomically**.
+  - On `SET_COMPLETE` → write one `workout_sets` row (queue until `WORKOUT_STARTED` has persisted).
+  - On `WORKOUT_COMPLETE` or `WORKOUT_STOPPED` → upsert `workout_sessions` with totals/duration.
 - **Idempotency:** Use `(session_id, set_index)` unique constraints; retries safe.
 - **Offline queue:** if write fails, enqueue aggregate payloads (set/session) in IndexedDB (cap below); retry on next launch.
 

@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "pnpm --filter app dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

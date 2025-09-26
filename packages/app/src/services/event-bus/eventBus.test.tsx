@@ -41,10 +41,13 @@ describe('EventBus', () => {
     const unsubscribe = result.current.subscribe('engine:event', listener);
 
     act(() => {
+      const startedAt = Date.now();
       const event: EngineEvent = {
         type: 'WORKOUT_STARTED',
         sessionId: 'session-1',
-        ts: Date.now(),
+        workoutType: 'practice',
+        startedAt,
+        ts: startedAt,
       };
       result.current.emit('engine:event', event);
     });
@@ -54,10 +57,14 @@ describe('EventBus', () => {
     unsubscribe();
 
     act(() => {
+      const stoppedTs = Date.now();
       const event: EngineEvent = {
         type: 'WORKOUT_STOPPED',
+        sessionId: 'session-1',
+        totalReps: 0,
+        durationSec: 0,
         reason: 'user',
-        ts: Date.now(),
+        ts: stoppedTs,
       };
       result.current.emit('engine:event', event);
     });
@@ -90,10 +97,14 @@ describe('EventBus', () => {
     expect(eventBus).not.toBeNull();
 
     act(() => {
+      const stoppedTs = Date.now();
       const event: EngineEvent = {
         type: 'WORKOUT_STOPPED',
+        sessionId: 'session-1',
+        totalReps: 0,
+        durationSec: 0,
         reason: 'user',
-        ts: Date.now(),
+        ts: stoppedTs,
       };
       eventBus?.emit('engine:event', event);
     });
@@ -103,10 +114,14 @@ describe('EventBus', () => {
     unmount();
 
     act(() => {
+      const stoppedTs = Date.now();
       const event: EngineEvent = {
         type: 'WORKOUT_STOPPED',
+        sessionId: 'session-1',
+        totalReps: 0,
+        durationSec: 0,
         reason: 'user',
-        ts: Date.now(),
+        ts: stoppedTs,
       };
       eventBus?.emit('engine:event', event);
     });

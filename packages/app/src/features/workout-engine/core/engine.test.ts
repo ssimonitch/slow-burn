@@ -29,7 +29,13 @@ describe('workout engine reducer', () => {
     expect(nextState.sessionId).not.toBeNull();
     expect(nextState.startedAt).toBe(1000);
     expect(events).toHaveLength(1);
-    expect(events[0].type).toBe('WORKOUT_STARTED');
+    expect(events[0]).toMatchObject({
+      type: 'WORKOUT_STARTED',
+      workoutType: 'practice',
+      startedAt: 1000,
+      ts: 1000,
+    });
+    expect(typeof events[0].sessionId).toBe('string');
   });
 
   it('initialises a set when START_SET is received', () => {
@@ -56,7 +62,11 @@ describe('workout engine reducer', () => {
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({
       type: 'SET_STARTED',
+      sessionId: nextState.sessionId,
       setIndex: 0,
+      targetType: 'reps',
+      goalValue: 5,
+      startedAt: 1200,
       ts: 1200,
     });
   });
@@ -114,6 +124,7 @@ describe('workout engine reducer', () => {
     expect(repResult.state.currentSet?.actualReps).toBe(1);
     expect(repResult.events[0]).toMatchObject({
       type: 'REP_TICK',
+      sessionId: repResult.state.sessionId,
       repCount: 1,
       totalReps: 1,
     });
@@ -156,6 +167,9 @@ describe('workout engine reducer', () => {
     expect(stopResult.events).toEqual([
       {
         type: 'WORKOUT_STOPPED',
+        sessionId: stopResult.state.sessionId,
+        totalReps: 0,
+        durationSec: 1,
         reason: 'user',
         ts: 500,
       },

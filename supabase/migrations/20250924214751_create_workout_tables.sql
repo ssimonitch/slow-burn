@@ -52,12 +52,15 @@ create index if not exists workout_sets_session_idx
 
 -- Trigger to keep updated_at fresh on session edits
 create or replace function public.set_updated_at()
-returns trigger as $$
+  returns trigger
+  language plpgsql
+  set search_path = ''
+as $$
 begin
   new.updated_at = timezone('utc', now());
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 create trigger set_workout_sessions_updated_at
 before update on public.workout_sessions

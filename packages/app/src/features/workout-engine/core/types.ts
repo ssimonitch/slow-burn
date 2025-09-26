@@ -51,10 +51,26 @@ export type EngineCommand =
 export type EngineExternalSignal = { type: 'POSE_EVENT'; event: PoseWorkerEvent } | { type: 'TIMER_TICK'; ts: number };
 
 export type EngineEvent =
-  | { type: 'WORKOUT_STARTED'; sessionId: string; ts: number }
-  | { type: 'SET_STARTED'; setIndex: number; exercise: 'squat'; ts: number }
+  | {
+      type: 'WORKOUT_STARTED';
+      sessionId: string;
+      workoutType: 'practice';
+      startedAt: number;
+      ts: number;
+    }
+  | {
+      type: 'SET_STARTED';
+      sessionId: string;
+      setIndex: number;
+      exercise: 'squat';
+      targetType: 'reps' | 'time';
+      goalValue: number;
+      startedAt: number;
+      ts: number;
+    }
   | {
       type: 'REP_TICK';
+      sessionId: string;
       repCount: number;
       totalReps: number;
       setIndex: number;
@@ -62,19 +78,27 @@ export type EngineEvent =
     }
   | {
       type: 'SET_COMPLETE';
+      sessionId: string;
       setIndex: number;
+      exercise: 'squat';
+      targetType: 'reps' | 'time';
+      goalValue: number;
       actualReps: number;
       durationSec: number;
       ts: number;
     }
   | {
       type: 'WORKOUT_COMPLETE';
+      sessionId: string;
       totalReps: number;
       durationSec: number;
       ts: number;
     }
   | {
       type: 'WORKOUT_STOPPED';
+      sessionId: string;
+      totalReps: number;
+      durationSec: number;
       reason: 'user' | 'pose-lost' | 'error';
       ts: number;
     };

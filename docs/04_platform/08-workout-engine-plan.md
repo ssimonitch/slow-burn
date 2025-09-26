@@ -83,7 +83,8 @@ Guidelines:
 - Voice adapter:
   - Subscribes to `engine:out` for `REP_TICK`, `SET_COMPLETE`, `WORKOUT_COMPLETE` and schedules audio.
 - Storage adapter:
-  - Subscribes to `engine:out` and writes aggregates to Supabase on boundaries.
+  - Listens exclusively to `engine:event` messages (no command coupling) and writes aggregates to Supabase.
+  - Queues `SET_COMPLETE` events until the matching `WORKOUT_STARTED` upsert succeeds, keeping persistence idempotent.
 
 ## 7) Test Harness Screen
 Location: `packages/app/src/features/workout-engine/harness/`.
@@ -102,7 +103,7 @@ Camera: start with a placeholder; integrate real media capture when ready to fee
 - M1 ✅ Reducer + Event Bus shell in place; manual buttons produce expected emissions; unit tests cover reducer transitions.
 - M2 ✅ Pose adapter connected; fake `REP_COMPLETE` generator for harness; Voice adapter logs would-be playback.
 - M3 ◻️ Audio preload worker integrated; simple audio playback for `REP_TICK` in Practice mode.
-- M4 ◻️ Storage adapter writes aggregates to Supabase; types generated and used.
+- M4 ✅ Storage adapter writes aggregates to Supabase; types generated and used.
 
 ## 9) Testing Strategy
 - Vitest unit tests for reducer (pure transitions, boundary cases).

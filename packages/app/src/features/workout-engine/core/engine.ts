@@ -46,6 +46,8 @@ function reduceCommand(state: WorkoutEngineState, command: EngineCommand): Engin
       const event: EngineEvent = {
         type: 'WORKOUT_STARTED',
         sessionId,
+        workoutType: command.workoutType,
+        startedAt,
         ts: startedAt,
       };
 
@@ -73,8 +75,12 @@ function reduceCommand(state: WorkoutEngineState, command: EngineCommand): Engin
 
       const event: EngineEvent = {
         type: 'SET_STARTED',
+        sessionId: state.sessionId,
         setIndex: setState.index,
         exercise: setState.exercise,
+        targetType: setState.targetType,
+        goalValue: setState.goalValue,
+        startedAt: setState.startedAt,
         ts: setState.startedAt,
       };
 
@@ -127,7 +133,7 @@ function reduceCommand(state: WorkoutEngineState, command: EngineCommand): Engin
       const ts = command.ts;
       const currentSet = state.currentSet;
 
-      const completeEvent = createSetCompleteEvent(currentSet, currentSet.actualReps, ts);
+      const completeEvent = createSetCompleteEvent(state.sessionId, currentSet, currentSet.actualReps, ts);
 
       const completedSets = [...state.completedSets, toAggregate(currentSet, currentSet.actualReps, ts)];
 
@@ -147,14 +153,23 @@ function reduceCommand(state: WorkoutEngineState, command: EngineCommand): Engin
         return { state, events: [] };
       }
 
+      if (!state.sessionId) {
+        return { state, events: [] };
+      }
+
       const events: EngineEvent[] = [];
 
       if (state.currentSet && state.currentSet.actualReps > 0) {
-        events.push(createSetCompleteEvent(state.currentSet, state.currentSet.actualReps, command.ts));
+        events.push(createSetCompleteEvent(state.sessionId, state.currentSet, state.currentSet.actualReps, command.ts));
       }
+
+      const durationSec = state.startedAt != null ? calculateDurationSeconds(state.startedAt, command.ts) : 0;
 
       events.push({
         type: 'WORKOUT_STOPPED',
+        sessionId: state.sessionId,
+        totalReps: state.totalReps,
+        durationSec,
         reason: command.reason ?? 'user',
         ts: command.ts,
       });
@@ -226,9 +241,15 @@ function handleRepComplete(state: WorkoutEngineState, event: PoseWorkerRepComple
     actualReps: repCount,
   };
 
+  const sessionId = state.sessionId;
+  if (!sessionId) {
+    return { state, events: [] };
+  }
+
   const events: EngineEvent[] = [
     {
       type: 'REP_TICK',
+      sessionId,
       repCount,
       totalReps,
       setIndex: currentSet.index,
@@ -244,7 +265,7 @@ function handleRepComplete(state: WorkoutEngineState, event: PoseWorkerRepComple
   };
 
   if (currentSet.targetType === 'reps' && repCount >= currentSet.goalValue) {
-    events.push(createSetCompleteEvent(currentSet, repCount, timestamp));
+    events.push(createSetCompleteEvent(sessionId, currentSet, repCount, timestamp));
 
     const completedSet = toAggregate(currentSet, repCount, timestamp);
     const completedSets = [...state.completedSets, completedSet];
@@ -262,10 +283,14 @@ function handleRepComplete(state: WorkoutEngineState, event: PoseWorkerRepComple
   };
 }
 
-function createSetCompleteEvent(set: WorkoutSetState, actualReps: number, ts: number): EngineEvent {
+function createSetCompleteEvent(sessionId: string, set: WorkoutSetState, actualReps: number, ts: number): EngineEvent {
   return {
     type: 'SET_COMPLETE',
+    sessionId,
     setIndex: set.index,
+    exercise: set.exercise,
+    targetType: set.targetType,
+    goalValue: set.goalValue,
     actualReps,
     durationSec: calculateDurationSeconds(set.startedAt, ts),
     ts,

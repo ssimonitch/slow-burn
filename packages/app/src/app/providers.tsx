@@ -4,6 +4,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { EventBusProvider } from '@/services/event-bus';
 import { WorkoutEngineRuntimeBridge } from '@/features/workout-engine';
+import { SupabaseStorageBridge } from '@/services/storage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 export function AppProviders({ children }: PropsWithChildren<unknown>) {
   return (
     <EventBusProvider>
+      <SupabaseStorageBridge />
       <WorkoutEngineRuntimeBridge />
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={null}>{children}</Suspense>

@@ -129,10 +129,22 @@ slow-burn/
 - GitHub Actions workflow, caching strategy, and environment variable documentation planned once tests stabilize.
 
 ## 5. Post-Scaffold Next Actions
-1. Implement the workout engine reducer and event bus wiring per spec before touching pose logic.
-2. Populate the recorded audio set (MVP) and wire Workbox precache manifest.
-3. Add Supabase migrations + type-safe client wrappers (e.g., `supabase/tsconfig.json` + typegen).
-4. Introduce development SpeechSynthesis fallback behind feature flag for quick iteration.
-5. Wire CI to run `pnpm test` and `pnpm test:e2e --project=chromium` on pull requests.
+1. ✅ Workout engine reducer + event bus wiring (complete).
+2. ✅ Storage adapter: subscribe to `engine:event` and persist aggregates (complete)
+   - On `SET_COMPLETE` → insert `workout_sets` (idempotent on `(session_id, set_index)`).
+   - On `WORKOUT_STOPPED` (and future `WORKOUT_COMPLETE`) → upsert `workout_sessions`.
+   - Use the generated types (`@/services/supabase/types.gen`) for typed inserts.
+   - Add lightweight unit tests with a mocked Supabase client.
+3. Real pose pipeline: camera capture + pose worker adapter
+   - Bridge worker events into `pose:event`; keep the fake rep stream toggle for dev.
+   - Throttle frames off worker `HEARTBEAT` and surface a simple debug HUD.
+4. Dev voice driver + on‑screen cues
+   - Start with clear on‑screen cues in the harness/Practice screen.
+   - Add a dev‑only SpeechSynthesis fallback behind a flag for quick iteration.
+5. Recorded audio + Workbox (later)
+   - Integrate recorded assets and an ingest script; wire the audio‑preload worker.
+   - Tune PWA precache patterns once paths are stable.
+6. CI wiring
+   - Add a GitHub Actions workflow to run lint, vitest, and (later) a Playwright smoke test.
 
 Once these steps are followed, we will have a concrete scaffolding ready for Codex-driven implementation while keeping scope aligned with the MVP architecture.
