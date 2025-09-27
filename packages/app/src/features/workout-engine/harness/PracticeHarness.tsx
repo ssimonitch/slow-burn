@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { buttons, typography } from '@/app/theme';
 import { useEventBus, useEventSubscription } from '@/services/event-bus';
+import type { CameraAngle, PoseBackend, PoseWorkerPhaseState } from '@/workers';
 import type { EngineCommand, EngineEvent, WorkoutEngineMode } from '../core';
 
 const MAX_LOG_ENTRIES = 20;
@@ -11,8 +12,22 @@ interface CommandLogEntry {
   readonly issuedAt: number;
 }
 
+type PosePipelineStatus = 'idle' | 'starting' | 'running' | 'error';
+
+interface PoseDebugMetrics {
+  readonly fps?: number;
+  readonly backend?: PoseBackend;
+  readonly theta?: number;
+  readonly state?: PoseWorkerPhaseState;
+  readonly valid?: boolean;
+  readonly lastUpdated?: number;
+  readonly confidence?: number;
+}
+
 export function PracticeHarness() {
   const bus = useEventBus();
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   const [mode, setMode] = useState<WorkoutEngineMode>('IDLE');
   const [totalReps, setTotalReps] = useState(0);
   const [lastEventTs, setLastEventTs] = useState<number | undefined>(undefined);
@@ -23,6 +38,13 @@ export function PracticeHarness() {
   const [completedSets, setCompletedSets] = useState(0);
   const [nextSetIndex, setNextSetIndex] = useState(0);
   const [autoStream, setAutoStream] = useState(false);
+
+  const [poseStatus, setPoseStatus] = useState<PosePipelineStatus>('idle');
+  const [poseError, setPoseError] = useState<string | null>(null);
+  const [poseLost, setPoseLost] = useState(false);
+  const [poseDebugEnabled, setPoseDebugEnabled] = useState(import.meta.env.DEV);
+  const [poseMetrics, setPoseMetrics] = useState<PoseDebugMetrics>({});
+  const [cameraAngle, setCameraAngle] = useState<CameraAngle>('front');
 
   useEventSubscription('engine:event', (event) => {
     setEvents((prev) => [event, ...prev].slice(0, MAX_LOG_ENTRIES));
@@ -76,6 +98,42 @@ export function PracticeHarness() {
     }
   });
 
+  useEventSubscription('pose:event', (event) => {
+    switch (event.type) {
+      case 'HEARTBEAT':
+        setPoseStatus((status) => (status === 'starting' || status === 'idle' ? 'running' : status));
+        setPoseMetrics((prev) => ({
+          ...prev,
+          fps: event.fps ?? prev.fps,
+          backend: event.backend ?? prev.backend,
+          lastUpdated: event.ts,
+        }));
+        break;
+      case 'DEBUG_METRICS':
+        setPoseMetrics((prev) => ({
+          ...prev,
+          theta: event.theta ?? prev.theta,
+          state: event.state ?? prev.state,
+          valid: event.valid ?? prev.valid,
+          confidence: event.confidence ?? prev.confidence,
+          lastUpdated: event.ts,
+        }));
+        break;
+      case 'POSE_LOST':
+        setPoseLost(true);
+        break;
+      case 'POSE_REGAINED':
+        setPoseLost(false);
+        break;
+      case 'ERROR':
+        setPoseStatus('error');
+        setPoseError(event.message ?? event.code);
+        break;
+      default:
+        break;
+    }
+  });
+
   const emitCommand = useCallback(
     (command: EngineCommand) => {
       bus.emit('engine:command', command);
@@ -103,6 +161,50 @@ export function PracticeHarness() {
     [bus],
   );
 
+  const startPosePipeline = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    setPoseStatus('starting');
+    setPoseError(null);
+    setPoseLost(false);
+    setAutoStream(false);
+    bus.emit('pose:command', { type: 'FAKE_STREAM_STOP' });
+    bus.emit('pose:command', {
+      type: 'PIPELINE_START',
+      video,
+      debug: poseDebugEnabled,
+      angle: cameraAngle,
+    });
+  }, [bus, poseDebugEnabled, cameraAngle]);
+
+  const stopPosePipeline = useCallback(() => {
+    bus.emit('pose:command', { type: 'PIPELINE_STOP' });
+    setPoseStatus('idle');
+    setPoseLost(false);
+    setPoseError(null);
+    setPoseMetrics({});
+  }, [bus]);
+
+  const togglePoseDebug = useCallback(
+    (debug: boolean) => {
+      setPoseDebugEnabled(debug);
+      bus.emit('pose:command', { type: 'PIPELINE_SET_DEBUG', debug });
+    },
+    [bus],
+  );
+
+  const updateCameraAngle = useCallback(
+    (angle: CameraAngle) => {
+      setCameraAngle(angle);
+      if (poseStatus === 'running' || poseStatus === 'starting') {
+        bus.emit('pose:command', { type: 'PIPELINE_SET_VIEW', angle });
+      }
+    },
+    [bus, poseStatus],
+  );
+
   const latestSessionId = useMemo(() => {
     const latestEvent = events.find((event) => event.type === 'WORKOUT_STARTED') as
       | Extract<EngineEvent, { type: 'WORKOUT_STARTED' }>
@@ -113,27 +215,44 @@ export function PracticeHarness() {
   const modeBadge = useMemo(() => {
     switch (mode) {
       case 'PRACTICE':
-        return {
-          label: 'Active',
-          className: 'bg-emerald-500/20 text-emerald-200',
-        };
+        return { label: 'Active', className: 'bg-emerald-500/20 text-emerald-200' };
       case 'PAUSED':
-        return {
-          label: 'Paused',
-          className: 'bg-amber-500/20 text-amber-200',
-        };
+        return { label: 'Paused', className: 'bg-amber-500/20 text-amber-200' };
       case 'COMPLETE':
-        return {
-          label: 'Complete',
-          className: 'bg-sky-500/20 text-sky-200',
-        };
+        return { label: 'Complete', className: 'bg-sky-500/20 text-sky-200' };
       default:
-        return {
-          label: 'Idle',
-          className: 'bg-slate-700/40 text-slate-200',
-        };
+        return { label: 'Idle', className: 'bg-slate-700/40 text-slate-200' };
     }
   }, [mode]);
+
+  const poseStatusBadge = useMemo(() => {
+    switch (poseStatus) {
+      case 'running':
+        return {
+          label: poseLost ? 'Running (pose lost)' : 'Running',
+          className: poseLost ? 'bg-amber-500/20 text-amber-200' : 'bg-emerald-500/20 text-emerald-200',
+        };
+      case 'starting':
+        return { label: 'Starting…', className: 'bg-sky-500/20 text-sky-200' };
+      case 'error':
+        return { label: 'Error', className: 'bg-rose-500/20 text-rose-200' };
+      default:
+        return { label: 'Idle', className: 'bg-slate-700/40 text-slate-200' };
+    }
+  }, [poseStatus, poseLost]);
+
+  const cameraAngleLabel = useMemo(() => {
+    switch (cameraAngle) {
+      case 'front':
+        return 'Front';
+      case 'side':
+        return 'Side';
+      case 'back':
+        return 'Back';
+      default:
+        return cameraAngle;
+    }
+  }, [cameraAngle]);
 
   const canStartWorkout = mode === 'IDLE' || mode === 'COMPLETE';
   const hasCurrentSet = currentSetIndex != null;
@@ -196,6 +315,82 @@ export function PracticeHarness() {
           </dl>
         </div>
 
+        <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+          <h4 className={typography.smallHeading}>Pose Pipeline</h4>
+          <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <dt className="text-slate-400">Status</dt>
+              <dd>
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${poseStatusBadge.className}`}
+                >
+                  {poseStatusBadge.label}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-slate-400">Camera Angle</dt>
+              <dd className="font-medium text-slate-100">{cameraAngleLabel}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-400">Debug Metrics</dt>
+              <dd className="font-medium text-slate-100">{poseDebugEnabled ? 'Enabled' : 'Disabled'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-400">Backend</dt>
+              <dd className="font-medium text-slate-100">{poseMetrics.backend ?? '—'}</dd>
+            </div>
+            <div>
+              <dt className="text-slate-400">FPS</dt>
+              <dd className="font-medium text-slate-100">{poseMetrics.fps != null ? poseMetrics.fps : '—'}</dd>
+            </div>
+          </dl>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={buttons.secondary}
+              onClick={startPosePipeline}
+              disabled={poseStatus === 'starting' || poseStatus === 'running'}
+            >
+              Start Camera + Pose
+            </button>
+            <button
+              type="button"
+              className={buttons.secondary}
+              onClick={stopPosePipeline}
+              disabled={poseStatus === 'idle'}
+            >
+              Stop Pose Pipeline
+            </button>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                checked={poseDebugEnabled}
+                onChange={(event) => togglePoseDebug(event.target.checked)}
+              />
+              Debug HUD
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+              <span>Angle</span>
+              <select
+                className="rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100"
+                value={cameraAngle}
+                onChange={(event) => updateCameraAngle(event.target.value as CameraAngle)}
+              >
+                <option value="front">Front</option>
+                <option value="side">Side</option>
+                <option value="back">Back</option>
+              </select>
+            </label>
+          </div>
+          {poseError ? <p className="mt-2 text-sm text-rose-300">{poseError}</p> : null}
+          <div className="mt-3 overflow-hidden rounded-md border border-slate-800 bg-black">
+            <video ref={videoRef} className="aspect-video w-full object-contain" playsInline muted />
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
           <h4 className={typography.smallHeading}>Controls</h4>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -320,6 +515,8 @@ export function PracticeHarness() {
             </button>
           </div>
         </div>
+
+        <PoseDebugPanel metrics={poseMetrics} poseLost={poseLost} status={poseStatus} />
       </section>
 
       <section className="grid gap-3 md:grid-cols-2">
@@ -371,6 +568,52 @@ function formatEvent(event: EngineEvent): string {
     default:
       return `${new Date().toLocaleTimeString()} ← UNKNOWN_EVENT`;
   }
+}
+
+interface PoseDebugPanelProps {
+  readonly metrics: PoseDebugMetrics;
+  readonly poseLost: boolean;
+  readonly status: PosePipelineStatus;
+}
+
+function PoseDebugPanel({ metrics, poseLost, status }: PoseDebugPanelProps) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+      <h4 className={typography.smallHeading}>Pose Debug HUD</h4>
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <div>
+          <dt className="text-slate-400">Pose Lost</dt>
+          <dd className="font-medium text-slate-100">{poseLost ? 'Yes' : 'No'}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">State</dt>
+          <dd className="font-medium text-slate-100">{metrics.state ?? (status === 'running' ? '—' : 'Idle')}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Theta</dt>
+          <dd className="font-medium text-slate-100">
+            {metrics.theta != null ? `${Math.round(metrics.theta)}°` : '—'}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Valid Frame</dt>
+          <dd className="font-medium text-slate-100">{metrics.valid != null ? (metrics.valid ? 'Yes' : 'No') : '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Last Update</dt>
+          <dd className="font-medium text-slate-100">
+            {metrics.lastUpdated ? `${Math.round(metrics.lastUpdated)} ms` : '—'}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-slate-400">Confidence</dt>
+          <dd className="font-medium text-slate-100">
+            {metrics.confidence != null ? `${Math.round(metrics.confidence * 100)}%` : '—'}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
 }
 
 export default PracticeHarness;

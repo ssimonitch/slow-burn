@@ -2,6 +2,8 @@
  * Message types exchanged between the main thread and pose worker.
  * Mirrors 12-pose-worker-spec.md (MVP v1).
  */
+export type CameraAngle = 'front' | 'side' | 'back';
+
 export type PoseWorkerCommand =
   | PoseWorkerInitCommand
   | PoseWorkerFrameCommand
@@ -18,6 +20,7 @@ export interface PoseWorkerInitCommand {
   modelVersion?: string;
   targetFps?: TargetFps;
   debug?: boolean;
+  view?: CameraAngle;
 }
 
 export interface PoseWorkerFrameCommand {
@@ -42,6 +45,7 @@ export interface PoseWorkerConfigCommand {
   POSE_LOST_TIMEOUT_MS?: number;
   EMA_ALPHA?: number;
   SINGLE_SIDE_PENALTY?: number;
+  CAMERA_VIEW?: CameraAngle;
 }
 
 export interface PoseWorkerStopCommand {
@@ -60,7 +64,7 @@ export interface PoseWorkerConfig {
 }
 
 export const DEFAULT_POSE_WORKER_CONFIG: PoseWorkerConfig = {
-  keypointConfidenceThreshold: 0.6,
+  keypointConfidenceThreshold: 0.5,
   debounceMs: 350,
   minDownHoldMs: 150,
   thetaDownDegrees: 100,
@@ -132,13 +136,14 @@ export interface PoseWorkerDebugMetricsEvent {
   theta?: number;
   state?: PoseWorkerPhaseState;
   valid?: boolean;
+  confidence?: number;
 }
 
 export type PoseWorkerPhaseState = 'NO_POSE' | 'UP' | 'DOWN';
 
 export type PoseWorkerErrorCode = 'MODEL_LOAD' | 'FRAME_DECODE' | 'FRAME_NOT_SUPPORTED' | 'BACKEND_INIT' | 'INTERNAL';
 
-export type PoseBackend = 'webgpu' | 'webgl' | 'wasm';
+export type PoseBackend = 'webgpu' | 'webgl' | 'wasm' | 'cpu';
 
 export function isPoseWorkerCommand(value: unknown): value is PoseWorkerCommand {
   return (

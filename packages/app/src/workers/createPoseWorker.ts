@@ -2,9 +2,7 @@ import type { PoseWorkerCommand, PoseWorkerEvent } from './pose.types';
 
 export interface PoseWorkerHandle {
   readonly worker: Worker;
-  postMessage:
-    | ((message: PoseWorkerCommand) => void)
-    | ((message: PoseWorkerCommand, transfer: Transferable[]) => void);
+  postMessage(message: PoseWorkerCommand, transfer?: Transferable[]): void;
   addMessageListener(listener: (event: MessageEvent<PoseWorkerEvent>) => void): () => void;
   terminate(): void;
 }

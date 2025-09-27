@@ -101,7 +101,7 @@ Camera: start with a placeholder; integrate real media capture when ready to fee
 
 ## 8) Milestones
 - M1 ✅ Reducer + Event Bus shell in place; manual buttons produce expected emissions; unit tests cover reducer transitions.
-- M2 ✅ Pose adapter connected; fake `REP_COMPLETE` generator for harness; Voice adapter logs would-be playback.
+- M2 ✅ Pose adapter connected; fake `REP_COMPLETE` generator retained for dev, and the real camera→worker pipeline (MoveNet Lightning via tfjs) now streams frames into the engine with live rep counting + debug HUD in the harness (front/side/back views selectable with per-angle heuristics).
 - M3 ◻️ Audio preload worker integrated; simple audio playback for `REP_TICK` in Practice mode.
 - M4 ✅ Storage adapter writes aggregates to Supabase; types generated and used.
 

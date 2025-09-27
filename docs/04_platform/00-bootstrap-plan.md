@@ -135,9 +135,12 @@ slow-burn/
    - On `WORKOUT_STOPPED` (and future `WORKOUT_COMPLETE`) → upsert `workout_sessions`.
    - Use the generated types (`@/services/supabase/types.gen`) for typed inserts.
    - Add lightweight unit tests with a mocked Supabase client.
-3. Real pose pipeline: camera capture + pose worker adapter
-   - Bridge worker events into `pose:event`; keep the fake rep stream toggle for dev.
-   - Throttle frames off worker `HEARTBEAT` and surface a simple debug HUD.
+3. ✅ Real pose pipeline: camera capture + pose worker adapter
+   - `PoseCameraService` acquires the device camera, captures `ImageBitmap` frames (with canvas fallback), and feeds them into the worker via the refreshed adapter.
+   - The adapter now mounts the worker on demand, forwards events on `pose:event`, maintains fake rep generators for dev, and exposes start/stop/debug commands over the bus.
+   - MoveNet Lightning (tfjs) runs inside the worker; squat angle heuristics emit `REP_COMPLETE`/`POSE_LOST` events with confidence values for storage/UI debugging.
+   - Practice harness lets devs choose camera angle (front/side/back); the worker tunes heuristics per angle (rear view falls back to hip-vs-knee depth rather than knee angle).
+   - Practice harness renders a camera preview plus a Pose Debug HUD so we can monitor heartbeat FPS, phase/state, and pose-lost status during manual QA.
 4. Dev voice driver + on‑screen cues
    - Start with clear on‑screen cues in the harness/Practice screen.
    - Add a dev‑only SpeechSynthesis fallback behind a flag for quick iteration.
