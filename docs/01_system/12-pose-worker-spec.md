@@ -54,14 +54,17 @@ All messages are **structured-clone** objects with a discriminated `type`. Video
 
 // update thresholds without reloading model
 { type: 'CONFIG',
-  TH_CONF?: number,               // keypoint confidence threshold (default 0.6)
-  DEBOUNCE_MS?: number,           // min time between reps (default 350)
-  THETA_DOWN_DEG?: number,        // knee angle threshold to consider "down" (default 100)
-  THETA_UP_DEG?: number,          // knee angle threshold to consider "up" (default 160)
-  MIN_DOWN_HOLD_MS?: number,      // must hold below down threshold (default 150)
-  POSE_LOST_TIMEOUT_MS?: number,   // no-valid-pose window before POSE_LOST (default 500)
-  EMA_ALPHA?: number,             // smoothing factor 0.3..0.8 (default 0.5)
-  SINGLE_SIDE_PENALTY?: number,   // confidence multiplier when only one leg valid (default 0.8)
+  TH_CONF?: number,                    // keypoint confidence threshold (default 0.5)
+  DEBOUNCE_MS?: number,                // min time between reps (default 350)
+  THETA_DOWN_DEG?: number,             // knee angle threshold to consider "down" (default 100)
+  THETA_UP_DEG?: number,               // knee angle threshold to consider "up" (default 160)
+  MIN_DOWN_HOLD_MS?: number,           // must hold below down threshold (default 150)
+  POSE_LOST_TIMEOUT_MS?: number,       // no-valid-pose window before POSE_LOST (default 500)
+  EMA_ALPHA?: number,                  // smoothing factor 0.3..0.8 (default 0.5)
+  SINGLE_SIDE_PENALTY?: number,        // confidence multiplier when only one leg valid (default 0.8)
+  ANKLE_CONFIDENCE_MIN?: number,       // min ankle confidence for symmetry check (default 0.3)
+  ANKLE_SYMMETRY_THRESHOLD?: number,   // max ankle height difference as % of leg length (default 0.15)
+  MIN_LEG_LENGTH_PIXELS?: number,      // min leg length for normalization (default 50)
 }
 
 // stop and dispose resources
@@ -85,11 +88,15 @@ All messages are **structured-clone** objects with a discriminated `type`. Video
 // dev-only: emitted if no frames are received for >2s (for debugging idle pipelines)
 { type: 'WORKER_IDLE', ts: number }
 
+// dev-only: emitted when ankle symmetry check is bypassed
+{ type: 'DEBUG_ANKLE_CHECK', ts: number, reason: 'missing_ankles'|'camera_far',
+  leftAnkleScore?: number, rightAnkleScore?: number, avgLegLength?: number }
+
 // non-fatal error for logs; UI may show toast and/or attempt a restart
 { type: 'ERROR', ts: number, code: string, message?: string }
 ```
 
-**Debug-only events:** `WORKER_IDLE` and any future `DEBUG_METRICS` payloads are emitted **only when `debug:true`** is passed at `INIT`. Production builds drop them on the floor; dev builds route them to the on-screen debug HUD (no persistence).
+**Debug-only events:** `WORKER_IDLE`, `DEBUG_METRICS`, and `DEBUG_ANKLE_CHECK` are emitted **only when `debug:true`** is passed at `INIT`. Production builds drop them on the floor; dev builds route them to the on-screen debug HUD (no persistence).
 
 **Timestamp rule:** for any outbound message, set `event.ts = FRAME.ts` of the **triggering frame**. For threshold-based signals (`POSE_LOST`/`POSE_REGAINED`), stamp the `FRAME.ts` where the state change occurred. The worker **never** invents its own timestamps.
 
@@ -143,12 +150,27 @@ Start in NO_POSE.
 - Any invalid frame resets the **hold** timers but does not force state to NO_POSE immediately.
 ```
 
-### 6.4 Pose lost/regained
+### 6.4 Ankle symmetry validation
+- To prevent leg raises from being counted as squats, validate that both ankles are at similar heights.
+- Check ankle keypoint confidence ≥ `ANKLE_CONFIDENCE_MIN` (default 0.3).
+- Calculate average leg length (hip-to-ankle distance) and verify ≥ `MIN_LEG_LENGTH_PIXELS` (default 50).
+- Reject pose if vertical ankle difference exceeds `ANKLE_SYMMETRY_THRESHOLD` × avg leg length × view multiplier.
+- View-specific multipliers (applied to base 15% threshold):
+  - Front: 1.0× (baseline 15%)
+  - Side: 2.0× (30% - more lenient due to perspective/depth)
+  - Back: 1.5× (22.5% - moderately more lenient)
+- If either ankle has low confidence or leg length is too small, bypass check (allow pose) to avoid false negatives.
+- Emit `DEBUG_ANKLE_CHECK` when bypass occurs (debug mode only).
+
+### 6.5 Orientation validation
+- For front and side views, validate detected orientation matches expected camera angle using facial keypoints.
+- Back view skips orientation validation (facial keypoints unreliable from behind).
+- Side view is lenient in both directions: allows any detected orientation when expected is 'side', and allows 'side' detection for any expected angle.
+- Orientation detection code is kept for future visual feedback features.
+
+### 6.6 Pose lost/regained
 - Maintain `last_valid_ts` (FRAME.ts of last valid frame). If `now - last_valid_ts ≥ POSE_LOST_TIMEOUT_MS` (default 500 ms) and not already lost → emit `POSE_LOST`.
 - When a valid frame is processed after POSE_LOST, emit `POSE_REGAINED` and re-enter UP/DOWN based on current `θ̂`.
-
-### 6.5 Optional composite depth guard (future)
-- For noisy scenes, add a secondary check: hip y below knee y at bottom. Not required for MVP; leave behind a feature flag.
 
 ---
 
@@ -159,6 +181,8 @@ FRAME(ts)
   if (processing || (ts - lastProcessedTs) < (1000/targetFps)) return // explicit skip
   processing = true; lastProcessedTs = ts
   → to OffscreenCanvas → tf.fromPixels → model.predict → keypoints
+    → validate orientation (front/side only) → maybe reject & return pose lost
+    → validate ankle symmetry → maybe emit DEBUG_ANKLE_CHECK (debug only) → maybe reject & return pose lost
     → validate required keypoints (≥ TH_CONF)
     → compute θ_left/right → θ = min → smooth θ̂ (EMA_ALPHA)
     → update state machine (UP/DOWN) & timers → maybe emit REP_COMPLETE
@@ -167,6 +191,8 @@ FRAME(ts)
   → dispose tensors, bitmap.close(); processing = false
 CONFIG → update thresholds/constants
 STOP → dispose model & exit
+
+Note: All camera angles (front, side, back) use the same knee-angle algorithm with view-specific tuning adjustments.
 ```
 
 ---

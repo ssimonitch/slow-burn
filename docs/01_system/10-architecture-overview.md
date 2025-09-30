@@ -24,7 +24,7 @@ Non-goals (MVP): leaderboards, social, 3D form coaching, streaming voice LLM, lo
 |  | **Workout Engine (State Machine)** | Drives `idle → countdown → active_set → rest → complete`; emits side-effects. | Pure reducer + side-effect adaptors. |
 |  | **Voice Driver** | Schedules **time-based** cues (circuits) and **per‑rep** numbers (Practice). | Web Audio with recorded assets; SpeechSynthesis dev fallback; TTS provider post-MVP. |
 |  | **Storage Adapter** | Buffers events → writes `workout_sets`, `workout_sessions`, `companion_state`. | Flush on set/workout boundaries; offline queue. |
-| Worker | **Pose Worker** | Runs TF.js/MediaPipe; emits `rep_complete`, `pose_lost/regained`. | Hysteresis + confidence gating + debounce. |
+| Worker | **Pose Worker** | Runs TF.js/MoveNet; emits `rep_complete`, `pose_lost/regained`. | Knee-angle detection + EMA smoothing + ankle symmetry validation. |
 | Edge/API | **LLM Adapter** | `/api/summary` and `/api/coach-talk`; schema-validated JSON; token/time caps. | Vercel Functions or Supabase Edge. |
 | Data | **Supabase Postgres (Micro)** | Tables: `companion_state`, `workout_sessions`, `workout_sets` (+ optional `rep_events`). | No auth in MVP; design for later RLS. |
 | Platform | **PWA Service Worker** | Offline shell + model caching; cache busting on release. | Respect autoplay policies. |

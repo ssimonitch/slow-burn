@@ -14,13 +14,6 @@ export interface KneeMetrics {
   readonly validSideCount: number;
 }
 
-export interface HipDeltaMetrics {
-  readonly isValid: boolean;
-  readonly delta?: number;
-  readonly confidence: number;
-  readonly validSideCount: number;
-}
-
 export interface KneeMetricsOptions {
   readonly confidenceThreshold: number;
   readonly singleSidePenalty: number;
@@ -64,43 +57,11 @@ export function computeKneeMetrics(keypoints: readonly PoseKeypoint[], options: 
   };
 }
 
-export function computeHipDeltaMetrics(keypoints: readonly PoseKeypoint[], threshold: number): HipDeltaMetrics {
-  const left = evaluateHipDelta(keypoints, LEFT_KEYS, threshold);
-  const right = evaluateHipDelta(keypoints, RIGHT_KEYS, threshold);
-
-  const candidates = [left, right].filter((side): side is HipDeltaEvaluation => side.valid);
-
-  if (candidates.length === 0) {
-    return {
-      isValid: false,
-      delta: undefined,
-      confidence: 0,
-      validSideCount: 0,
-    };
-  }
-
-  const delta = candidates.reduce((sum, candidate) => sum + candidate.delta, 0) / candidates.length;
-  const confidence = candidates.reduce((sum, candidate) => sum + candidate.confidence, 0) / candidates.length;
-
-  return {
-    isValid: true,
-    delta,
-    confidence,
-    validSideCount: candidates.length,
-  };
-}
-
 interface SideEvaluation {
   readonly valid: boolean;
   readonly theta: number;
   readonly confidence: number;
   readonly side: 'left' | 'right';
-}
-
-interface HipDeltaEvaluation {
-  readonly valid: boolean;
-  readonly delta: number;
-  readonly confidence: number;
 }
 
 function evaluateSide(keypoints: readonly PoseKeypoint[], keys: readonly string[], threshold: number): SideEvaluation {
@@ -125,32 +86,6 @@ function evaluateSide(keypoints: readonly PoseKeypoint[], keys: readonly string[
     theta,
     confidence,
     side: keys === LEFT_KEYS ? 'left' : 'right',
-  };
-}
-
-function evaluateHipDelta(
-  keypoints: readonly PoseKeypoint[],
-  keys: readonly string[],
-  threshold: number,
-): HipDeltaEvaluation {
-  const hip = findKeypoint(keypoints, keys[0]);
-  const knee = findKeypoint(keypoints, keys[1]);
-
-  if (!isKeypointValid(hip, threshold) || !isKeypointValid(knee, threshold)) {
-    return {
-      valid: false,
-      delta: 0,
-      confidence: 0,
-    };
-  }
-
-  const delta = Math.abs(hip.y - knee.y);
-  const confidence = Math.min(hip.score ?? 0, knee.score ?? 0);
-
-  return {
-    valid: true,
-    delta,
-    confidence,
   };
 }
 

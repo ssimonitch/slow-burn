@@ -45,6 +45,9 @@ export interface PoseWorkerConfigCommand {
   POSE_LOST_TIMEOUT_MS?: number;
   EMA_ALPHA?: number;
   SINGLE_SIDE_PENALTY?: number;
+  ANKLE_CONFIDENCE_MIN?: number;
+  ANKLE_SYMMETRY_THRESHOLD?: number;
+  MIN_LEG_LENGTH_PIXELS?: number;
   CAMERA_VIEW?: CameraAngle;
 }
 
@@ -61,6 +64,9 @@ export interface PoseWorkerConfig {
   poseLostTimeoutMs: number;
   emaAlpha: number;
   singleSidePenalty: number;
+  ankleConfidenceMin: number;
+  ankleSymmetryThreshold: number;
+  minLegLengthPixels: number;
 }
 
 export const DEFAULT_POSE_WORKER_CONFIG: PoseWorkerConfig = {
@@ -72,6 +78,9 @@ export const DEFAULT_POSE_WORKER_CONFIG: PoseWorkerConfig = {
   poseLostTimeoutMs: 500,
   emaAlpha: 0.5,
   singleSidePenalty: 0.8,
+  ankleConfidenceMin: 0.3,
+  ankleSymmetryThreshold: 0.15,
+  minLegLengthPixels: 50,
 };
 
 export const TARGET_FPS_OPTIONS = [24, 30] as const;
@@ -89,7 +98,8 @@ export type PoseWorkerEvent =
   | PoseWorkerHeartbeatEvent
   | PoseWorkerIdleEvent
   | PoseWorkerErrorEvent
-  | PoseWorkerDebugMetricsEvent;
+  | PoseWorkerDebugMetricsEvent
+  | PoseWorkerDebugAnkleCheckEvent;
 
 export type PoseWorkerEventType = PoseWorkerEvent['type'];
 
@@ -139,6 +149,15 @@ export interface PoseWorkerDebugMetricsEvent {
   confidence?: number;
 }
 
+export interface PoseWorkerDebugAnkleCheckEvent {
+  type: 'DEBUG_ANKLE_CHECK';
+  ts: number;
+  reason: 'missing_ankles' | 'camera_far';
+  leftAnkleScore?: number;
+  rightAnkleScore?: number;
+  avgLegLength?: number;
+}
+
 export type PoseWorkerPhaseState = 'NO_POSE' | 'UP' | 'DOWN';
 
 export type PoseWorkerErrorCode = 'MODEL_LOAD' | 'FRAME_DECODE' | 'FRAME_NOT_SUPPORTED' | 'BACKEND_INIT' | 'INTERNAL';
@@ -172,6 +191,9 @@ export interface PoseWorkerConfigSettings {
   readonly poseLostTimeoutMs: PoseWorkerConfigField<number>;
   readonly emaAlpha: PoseWorkerConfigField<number>;
   readonly singleSidePenalty: PoseWorkerConfigField<number>;
+  readonly ankleConfidenceMin: PoseWorkerConfigField<number>;
+  readonly ankleSymmetryThreshold: PoseWorkerConfigField<number>;
+  readonly minLegLengthPixels: PoseWorkerConfigField<number>;
 }
 
 export interface PoseWorkerConfigField<TValue> {
@@ -229,5 +251,23 @@ export const POSE_WORKER_CONFIG_SETTINGS: PoseWorkerConfigSettings = {
     min: 0,
     max: 1,
     step: 0.05,
+  },
+  ankleConfidenceMin: {
+    defaultValue: DEFAULT_POSE_WORKER_CONFIG.ankleConfidenceMin,
+    min: 0.1,
+    max: 0.9,
+    step: 0.05,
+  },
+  ankleSymmetryThreshold: {
+    defaultValue: DEFAULT_POSE_WORKER_CONFIG.ankleSymmetryThreshold,
+    min: 0.05,
+    max: 0.3,
+    step: 0.01,
+  },
+  minLegLengthPixels: {
+    defaultValue: DEFAULT_POSE_WORKER_CONFIG.minLegLengthPixels,
+    min: 20,
+    max: 200,
+    step: 5,
   },
 };
