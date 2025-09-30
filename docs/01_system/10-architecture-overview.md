@@ -104,10 +104,10 @@ Pre/Post → optional **Coach Talk** `/api/coach-talk` → `{message}`
 
 ## 4.1) Event Bus implementation
 - **Library:** **custom typed pub/sub** (no RxJS) to keep bundle small; backpressure handled at **sources** (worker/timer).
-- **API shape:** `publish(event)`, `subscribe(type, handler)` with a discriminated union Event type.
-- **Sequencing:** Bus assigns a monotonic **uint32 `seq`**; order by **(ts, seq)**. Wrap is not expected within a session; if detected, `ts` wins.
-- **Ordering:** single consumer loop processes events FIFO.
-- **Error handling:** each handler runs inside **try/catch**; exceptions are logged and may emit an `ENGINE_ERROR` diagnostic event; FIFO dispatch **continues**.
+- **API shape:** `emit(key, payload)`, `subscribe(key, handler)`, `getSequence()` with typed event map.
+- **Sequencing (MVP):** Bus assigns a monotonic **uint32 `seq`** internally for debugging; accessible via `getSequence()` but **not included in event payloads**. Events ordered by JavaScript call order (single-threaded, synchronous).
+- **Ordering:** Synchronous dispatch in FIFO order per event type; per-listener order within a type is deterministic (insertion order).
+- **Error handling:** each handler runs inside **try/catch**; exceptions are logged to console with sequence context; emits `debug:log` in dev mode; FIFO dispatch **continues**.
 - **Safe mode (post-MVP):** For launch, surface errors and prompt the user to restart the session; the auto-degrade-to-timed behavior moves to backlog until we see real failure modes.
 - **Backpressure:** worker emits sparse events (hysteresis); timer at 1 Hz; UI drops duplicate `INTERVAL_TICK` if delayed.
 - **Reference:** exact types and acceptance live in **11‑event‑loop‑spec.md**.

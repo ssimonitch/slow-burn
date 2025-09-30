@@ -35,6 +35,8 @@ There are **three** categories of events:
 2) **Workout** — countdowns, ticks, set/workout boundaries.
 3) **Sensing** — pose worker signals (reps, pose lost/regained).
 
+> **Note:** Event structures below show the **full design** including `seq` and `source` fields. The **MVP implementation** (§4.1) uses a simpler structure with only `type` and `ts` in payloads; `seq` is tracked internally for debugging.
+
 ### 3.0 Common types
 ```ts
 // Exercises supported in MVP (strings for wire compatibility)
@@ -177,6 +179,33 @@ subscribe<T extends EventType>(type: T, handler: (e: Extract<BaseEvent, {type:T}
 - **Backpressure:** Worker emits **sparse** events only (hysteresis); **no per-frame** traffic. Timer emits 1 Hz ticks. Engine de-duplicates late `INTERVAL_TICK` with the same `seconds_left`.
 - **Idempotency & replay:** Consumers must tolerate duplicate `ts`/`seq`. A JSON event log can be **replayed** through the Engine to produce identical summaries (acceptance §8).
 - **Error fallback (MVP):** If `publish` encounters an irrecoverable error, surface a non-blocking toast, advise the user to restart, and stop dispatching new events. The automated shift into "Timed Circuit only" returns post-MVP once failure patterns are clearer.
+
+### 4.1) MVP simplifications
+
+The MVP implementation takes a pragmatic approach to the event structure described in §3:
+
+**Event payloads (MVP):**
+- Events include `type` and `ts` but **not** `seq` or `source` fields in their payloads
+- Sequence tracking is **internal only** via `bus.getSequence()` for debugging
+- Each `emit()` increments an internal monotonic counter accessible for debug tooling
+- This reduces payload size and simplifies serialization for storage
+
+**Error diagnostics (MVP):**
+- Listener exceptions are logged to console with sequence context: `[EventBus] Error in listener for 'key' (seq N)`
+- Emits `debug:log` event in dev mode (not `ENGINE_ERROR`)
+- Recursion guard prevents infinite loops if `debug:log` listener throws
+- No automated fallback to timed-only mode (user restart required)
+
+**Rationale:**
+- Core benefits achieved: error isolation, internal debugging, dispatch continuation
+- Simpler event serialization for database writes
+- Lean payload structure keeps MVP focused
+
+**Post-MVP:**
+- Full event replay requires adding `seq` to event payloads
+- Structured `ENGINE_ERROR` events for automated recovery
+- Event log persistence for debugging production issues
+- Add `source` field for cross-adapter tracing
 
 ---
 
