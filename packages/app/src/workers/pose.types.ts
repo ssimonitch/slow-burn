@@ -72,11 +72,11 @@ export interface PoseWorkerConfig {
 export const DEFAULT_POSE_WORKER_CONFIG: PoseWorkerConfig = {
   keypointConfidenceThreshold: 0.5,
   debounceMs: 350,
-  minDownHoldMs: 150,
+  minDownHoldMs: 100,
   thetaDownDegrees: 100,
   thetaUpDegrees: 160,
   poseLostTimeoutMs: 500,
-  emaAlpha: 0.5,
+  emaAlpha: 0.6,
   singleSidePenalty: 0.8,
   ankleConfidenceMin: 0.3,
   ankleSymmetryThreshold: 0.15,

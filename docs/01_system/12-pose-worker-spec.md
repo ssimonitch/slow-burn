@@ -58,9 +58,9 @@ All messages are **structured-clone** objects with a discriminated `type`. Video
   DEBOUNCE_MS?: number,                // min time between reps (default 350)
   THETA_DOWN_DEG?: number,             // knee angle threshold to consider "down" (default 100)
   THETA_UP_DEG?: number,               // knee angle threshold to consider "up" (default 160)
-  MIN_DOWN_HOLD_MS?: number,           // must hold below down threshold (default 150)
+  MIN_DOWN_HOLD_MS?: number,           // must hold below down threshold (default 100)
   POSE_LOST_TIMEOUT_MS?: number,       // no-valid-pose window before POSE_LOST (default 500)
-  EMA_ALPHA?: number,                  // smoothing factor 0.3..0.8 (default 0.5)
+  EMA_ALPHA?: number,                  // smoothing factor 0.3..0.8 (default 0.6)
   SINGLE_SIDE_PENALTY?: number,        // confidence multiplier when only one leg valid (default 0.8)
   ANKLE_CONFIDENCE_MIN?: number,       // min ankle confidence for symmetry check (default 0.3)
   ANKLE_SYMMETRY_THRESHOLD?: number,   // max ankle height difference as % of leg length (default 0.15)
@@ -114,7 +114,7 @@ All messages are **structured-clone** objects with a discriminated `type`. Video
 ## 5) Keypoint requirements & smoothing
 - **Required keypoints for squats:** `left_hip`, `right_hip`, `left_knee`, `right_knee`, `left_ankle`, `right_ankle` with confidence ≥ **TH_CONF**.
 - If one side is missing, attempt with the other; if both sides fail, the frame is **invalid** (counts toward POSE_LOST window).
-- **Smoothing:** Exponential moving average on knee angles with `EMA_ALPHA` (default **0.5**, configurable via CONFIG; consider 0.3 for smoother/laggy, 0.7 for snappier/noisier); clamp to physical bounds.
+- **Smoothing:** Exponential moving average on knee angles with `EMA_ALPHA` (default **0.6**, configurable via CONFIG; consider 0.3-0.5 for smoother/laggy, 0.7-0.8 for snappier/noisier); clamp to physical bounds.
 - **Single-side fallback & penalty:** If only one leg meets `TH_CONF`, compute angles from that leg but **multiply** final rep `confidence` by `SINGLE_SIDE_PENALTY` (default **0.8**) to reduce false positives.
 
 ---
@@ -132,9 +132,10 @@ All messages are **structured-clone** objects with a discriminated `type`. Video
 ### 6.2 Thresholds (defaults; tunable via CONFIG)
 - `THETA_DOWN_DEG = 100°` → considered **DOWN** when `θ̂ ≤ 100`.
 - `THETA_UP_DEG = 160°`   → considered **UP** when `θ̂ ≥ 160`.
-- `MIN_DOWN_HOLD_MS = 150` → must stay below `THETA_DOWN_DEG` for this duration to confirm **DOWN**.
+- `MIN_DOWN_HOLD_MS = 100` → must stay below `THETA_DOWN_DEG` for this duration to confirm **DOWN**.
 - `DEBOUNCE_MS = 350` → minimum time between consecutive reps.
-- `TH_CONF = 0.6` → per-keypoint confidence threshold.
+- `TH_CONF = 0.5` → per-keypoint confidence threshold.
+- `EMA_ALPHA = 0.6` → exponential moving average smoothing factor (higher = more responsive, less smooth).
 
 These values align with the domain definition above: 160° confidently "UP", ≤100° considered sufficiently "DOWN" for a valid squat depth.
 
