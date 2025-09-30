@@ -7,8 +7,10 @@ import { initializeWorkoutEngine } from './runtime';
 
 class MockEventBus implements EventBus {
   private listeners = new Map<AppEventKey, Set<AppEventListener<AppEventKey>>>();
+  private sequence = 0;
 
   emit<K extends AppEventKey>(key: K, payload: Parameters<AppEventListener<K>>[0]) {
+    this.sequence += 1;
     this.listeners.get(key)?.forEach((listener) => listener(payload));
   }
 
@@ -23,6 +25,10 @@ class MockEventBus implements EventBus {
         this.listeners.delete(key);
       }
     };
+  }
+
+  getSequence() {
+    return this.sequence;
   }
 }
 

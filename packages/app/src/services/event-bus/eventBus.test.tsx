@@ -128,4 +128,92 @@ describe('EventBus', () => {
 
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it('continues dispatching to other listeners when one throws an error', () => {
+    const listener1 = vi.fn(() => {
+      throw new Error('Listener 1 error');
+    });
+    const listener2 = vi.fn();
+    const listener3 = vi.fn();
+
+    const { result } = renderHook(() => useEventBus(), {
+      wrapper: ({ children }: PropsWithChildren) => <EventBusProvider>{children}</EventBusProvider>,
+    });
+
+    // Subscribe three listeners
+    result.current.subscribe('engine:command', listener1);
+    result.current.subscribe('engine:command', listener2);
+    result.current.subscribe('engine:command', listener3);
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const payload: EngineCommand = {
+      type: 'START_WORKOUT',
+      workoutType: 'practice',
+      startedAt: 0,
+    };
+
+    act(() => {
+      result.current.emit('engine:command', payload);
+    });
+
+    // All listeners should have been called despite the error
+    expect(listener1).toHaveBeenCalledTimes(1);
+    expect(listener2).toHaveBeenCalledTimes(1);
+    expect(listener3).toHaveBeenCalledTimes(1);
+
+    // Error should have been logged
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[EventBus] Error in listener'),
+      expect.any(Error),
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('tracks sequence numbers for debugging', () => {
+    const { result } = renderHook(() => useEventBus(), {
+      wrapper: ({ children }: PropsWithChildren) => <EventBusProvider>{children}</EventBusProvider>,
+    });
+
+    const initialSeq = result.current.getSequence();
+    expect(initialSeq).toBe(0);
+
+    act(() => {
+      result.current.emit('engine:command', {
+        type: 'START_WORKOUT',
+        workoutType: 'practice',
+        startedAt: 0,
+      });
+    });
+
+    expect(result.current.getSequence()).toBe(1);
+
+    act(() => {
+      result.current.emit('engine:command', {
+        type: 'PAUSE',
+        ts: 100,
+      });
+    });
+
+    expect(result.current.getSequence()).toBe(2);
+  });
+
+  it('increments sequence even when no listeners exist', () => {
+    const { result } = renderHook(() => useEventBus(), {
+      wrapper: ({ children }: PropsWithChildren) => <EventBusProvider>{children}</EventBusProvider>,
+    });
+
+    expect(result.current.getSequence()).toBe(0);
+
+    act(() => {
+      result.current.emit('engine:command', {
+        type: 'START_WORKOUT',
+        workoutType: 'practice',
+        startedAt: 0,
+      });
+    });
+
+    expect(result.current.getSequence()).toBe(1);
+  });
 });
