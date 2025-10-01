@@ -38,6 +38,7 @@ export function PracticeHarness() {
   const [completedSets, setCompletedSets] = useState(0);
   const [nextSetIndex, setNextSetIndex] = useState(0);
   const [autoStream, setAutoStream] = useState(false);
+  const [targetReps, setTargetReps] = useState(30);
 
   const [poseStatus, setPoseStatus] = useState<PosePipelineStatus>('idle');
   const [poseError, setPoseError] = useState<string | null>(null);
@@ -443,25 +444,39 @@ export function PracticeHarness() {
             >
               Start Workout
             </button>
-            <button
-              type="button"
-              className={buttons.secondary}
-              disabled={!canStartSet}
-              onClick={() =>
-                emitCommand({
-                  type: 'START_SET',
-                  set: {
-                    index: nextSetIndex,
-                    exercise: 'squat',
-                    targetType: 'reps',
-                    goalValue: 10,
-                    startedAt: performance.now(),
-                  },
-                })
-              }
-            >
-              Start Practice Set
-            </button>
+            <div className="inline-flex items-center gap-2">
+              <button
+                type="button"
+                className={buttons.secondary}
+                disabled={!canStartSet}
+                onClick={() =>
+                  emitCommand({
+                    type: 'START_SET',
+                    set: {
+                      index: nextSetIndex,
+                      exercise: 'squat',
+                      targetType: 'reps',
+                      goalValue: targetReps,
+                      startedAt: performance.now(),
+                    },
+                  })
+                }
+              >
+                Start Practice Set
+              </button>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+                <span>Target:</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={targetReps}
+                  onChange={(e) => setTargetReps(Math.max(1, Math.min(100, Number(e.target.value) || 1)))}
+                  className="w-16 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-100"
+                />
+                <span className="text-xs text-slate-400">reps</span>
+              </label>
+            </div>
             <button
               type="button"
               className={buttons.secondary}

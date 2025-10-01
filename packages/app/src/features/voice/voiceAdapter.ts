@@ -29,20 +29,33 @@ export function initializeDevVoiceAdapter(bus: EventBus, options: Options = {}) 
     log(`spoke ${text}`);
   };
 
+  // Track the current set's goal so we can detect final reps
+  let currentSetGoal: number | null = null;
+
   const onEngineEvent = bus.subscribe('engine:event', (event) => {
     switch (event.type) {
+      case 'SET_STARTED':
+        currentSetGoal = event.targetType === 'reps' ? event.goalValue : null;
+        break;
+      case 'SET_COMPLETE':
+        currentSetGoal = null;
+        break;
       case 'REP_TICK': {
         const n = event.repCount;
-        if (MILESTONE_REPS.includes(n as (typeof MILESTONE_REPS)[number])) {
-          // Preempt current number if speaking
+        const isFinalRep = currentSetGoal != null && n >= currentSetGoal;
+        const isMilestone = MILESTONE_REPS.includes(n as (typeof MILESTONE_REPS)[number]);
+
+        // Final reps and milestones preempt current speech
+        if (isFinalRep || isMilestone) {
           if (driver.isSpeaking()) {
             driver.stopAll();
-            log('preempt current utterance for milestone');
+            log(isFinalRep ? 'preempt for final rep' : 'preempt current utterance for milestone');
           }
-          speak({ type: 'milestone', value: n });
+          speak({ type: isMilestone ? 'milestone' : 'say_number', value: n });
           break;
         }
 
+        // Regular numbers use drop-latest
         if (driver.isSpeaking()) {
           log(`drop_latest ${n} (busy)`);
           break;
@@ -53,6 +66,7 @@ export function initializeDevVoiceAdapter(bus: EventBus, options: Options = {}) 
       }
       case 'WORKOUT_STOPPED':
       case 'WORKOUT_COMPLETE':
+        currentSetGoal = null;
         driver.stopAll();
         log('stopped on session end');
         break;

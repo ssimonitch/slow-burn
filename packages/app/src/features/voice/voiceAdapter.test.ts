@@ -174,4 +174,304 @@ describe('dev voice adapter', () => {
     bus.emit('voice:command', { type: 'VOICE_STOP' });
     expect(logs.some((m) => m.includes('stopped'))).toBe(true);
   });
+
+  it('preempts current number for final rep of set', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    initializeDevVoiceAdapter(bus, { enabled: true, now: () => 5000 });
+
+    // Start a set with goal of 5 reps
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 5,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Start speaking rep 4
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 4,
+      totalReps: 4,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+    expect(logs.some((m) => m.includes('spoke 4'))).toBe(true);
+
+    // Final rep (5) should preempt rep 4
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 5,
+      totalReps: 5,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+    expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 5'))).toBe(true);
+  });
+
+  it('preempts when final rep is also a milestone (10/10)', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    initializeDevVoiceAdapter(bus, { enabled: true, now: () => 6000 });
+
+    // Start a set with goal of 10 reps (milestone AND final rep)
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 10,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Start speaking rep 9
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 9,
+      totalReps: 9,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+    expect(logs.some((m) => m.includes('spoke 9'))).toBe(true);
+
+    // Rep 10 is both milestone and final rep - should preempt and speak as milestone
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 10,
+      totalReps: 10,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+    expect(logs.some((m) => m.includes('preempt'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke milestone 10'))).toBe(true);
+  });
+
+  it('handles rapid-fire reps with final rep preemption', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    initializeDevVoiceAdapter(bus, { enabled: true, now: () => 7000 });
+
+    // Start a set with goal of 3 reps
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 3,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Spam reps 1, 2, 3 rapidly while voice is busy
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 1,
+      totalReps: 1,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+    expect(logs.some((m) => m.includes('spoke 1'))).toBe(true);
+
+    // Rep 2 arrives while speaking - should be dropped
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 2,
+      totalReps: 2,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+    expect(logs.some((m) => m.includes('drop_latest 2'))).toBe(true);
+
+    // Rep 3 (final) arrives while still speaking - should preempt
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 3,
+      totalReps: 3,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 3,
+    });
+    expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 3'))).toBe(true);
+  });
+
+  it('does not treat final rep as special for time-based sets', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    initializeDevVoiceAdapter(bus, { enabled: true, now: () => 8000 });
+
+    // Start a time-based set (targetType: 'time' instead of 'reps')
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'time',
+      goalValue: 60,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Start speaking rep 4
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 4,
+      totalReps: 4,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+    expect(logs.some((m) => m.includes('spoke 4'))).toBe(true);
+
+    // Rep 5 should use normal drop-latest, not final-rep preemption
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 5,
+      totalReps: 5,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+    expect(logs.some((m) => m.includes('drop_latest 5'))).toBe(true);
+    expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(false);
+  });
+
+  it('resets goal tracking correctly across multiple sets', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    initializeDevVoiceAdapter(bus, { enabled: true, now: () => 9000 });
+
+    // Start first set with goal of 5
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 5,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Rep 5 should preempt (final rep of first set)
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 1,
+      totalReps: 1,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 5,
+      totalReps: 5,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+    expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 5'))).toBe(true);
+    logs.length = 0; // Clear logs
+
+    // Complete first set
+    bus.emit('engine:event', {
+      type: 'SET_COMPLETE',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 5,
+      actualReps: 5,
+      durationSec: 10,
+      ts: 3,
+    });
+
+    // Start second set with different goal of 8
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 1,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 8,
+      startedAt: 4,
+      ts: 4,
+    });
+
+    // Rep 5 should NOT preempt now (not final for this set)
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 4,
+      totalReps: 9,
+      setIndex: 1,
+      sessionId: 's',
+      ts: 5,
+    });
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 5,
+      totalReps: 10,
+      setIndex: 1,
+      sessionId: 's',
+      ts: 6,
+    });
+    expect(logs.some((m) => m.includes('drop_latest 5'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 5'))).toBe(false);
+    logs.length = 0; // Clear logs
+
+    // Rep 8 SHOULD preempt (final of second set)
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 7,
+      totalReps: 12,
+      setIndex: 1,
+      sessionId: 's',
+      ts: 7,
+    });
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 8,
+      totalReps: 13,
+      setIndex: 1,
+      sessionId: 's',
+      ts: 8,
+    });
+    expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 8'))).toBe(true);
+  });
 });
