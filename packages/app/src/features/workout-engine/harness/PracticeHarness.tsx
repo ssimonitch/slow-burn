@@ -46,6 +46,20 @@ export function PracticeHarness() {
   const [poseMetrics, setPoseMetrics] = useState<PoseDebugMetrics>({});
   const [cameraAngle, setCameraAngle] = useState<CameraAngle>('front');
 
+  // Dev voice (SpeechSynthesis) state
+  function parseBooleanFlag(value: string | undefined, defaultValue: boolean): boolean {
+    if (value == null) return defaultValue;
+    const normalized = value.trim().toLowerCase();
+    return !(normalized === 'false' || normalized === '0' || normalized === 'off' || normalized === 'no');
+  }
+  const devTtsEnabled = import.meta.env.DEV && parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, true);
+  const [voicePrimed, setVoicePrimed] = useState(false);
+  const [voiceMuted, setVoiceMuted] = useState(false);
+  const [voiceVolume, setVoiceVolume] = useState(1);
+  const [voiceRate, setVoiceRate] = useState(1);
+  const [voiceLast, setVoiceLast] = useState<string | null>(null);
+  const [voiceBlocked, setVoiceBlocked] = useState(false);
+
   useEventSubscription('engine:event', (event) => {
     setEvents((prev) => [event, ...prev].slice(0, MAX_LOG_ENTRIES));
 
@@ -131,6 +145,27 @@ export function PracticeHarness() {
         break;
       default:
         break;
+    }
+  });
+
+  // Parse dev voice debug logs to keep simple telemetry for HUD
+  useEventSubscription('debug:log', ({ message, source }) => {
+    if (source !== 'voice-adapter' || !message.startsWith('voice:')) return;
+    const text = message.slice('voice:'.length).trim();
+    if (text === 'primed') setVoicePrimed(true);
+    if (text === 'blocked') setVoiceBlocked(true);
+    if (text === 'muted on') setVoiceMuted(true);
+    if (text === 'muted off') setVoiceMuted(false);
+    if (text.startsWith('volume')) {
+      const v = Number(text.split(' ')[1]);
+      if (!Number.isNaN(v)) setVoiceVolume(v);
+    }
+    if (text.startsWith('rate')) {
+      const r = Number(text.split(' ')[1]);
+      if (!Number.isNaN(r)) setVoiceRate(r);
+    }
+    if (text.startsWith('spoke')) {
+      setVoiceLast(text.replace('spoke', '').trim());
     }
   });
 
@@ -518,6 +553,104 @@ export function PracticeHarness() {
 
         <PoseDebugPanel metrics={poseMetrics} poseLost={poseLost} status={poseStatus} />
       </section>
+
+      {devTtsEnabled && (
+        <section className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+            <h4 className={typography.smallHeading}>Voice (Dev)</h4>
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <dt className="text-slate-400">Dev TTS</dt>
+                <dd className="font-medium text-slate-100">Enabled</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400">Primed</dt>
+                <dd className="font-medium text-slate-100">{voicePrimed ? 'Yes' : 'No'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400">Muted</dt>
+                <dd className="font-medium text-slate-100">{voiceMuted ? 'Yes' : 'No'}</dd>
+              </div>
+              <div>
+                <dt className="text-slate-400">Blocked</dt>
+                <dd className="font-medium text-slate-100">{voiceBlocked ? 'Yes' : 'No'}</dd>
+              </div>
+              <div className="col-span-2">
+                <dt className="text-slate-400">Last spoken</dt>
+                <dd className="font-medium text-slate-100">{voiceLast ?? '—'}</dd>
+              </div>
+            </dl>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className={buttons.secondary}
+                onClick={() => bus.emit('voice:command', { type: 'VOICE_PRIME' })}
+              >
+                Prime Voice
+              </button>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={voiceMuted}
+                  onChange={(e) => {
+                    setVoiceMuted(e.target.checked);
+                    bus.emit('voice:command', { type: 'VOICE_MUTE', mute: e.target.checked });
+                  }}
+                />
+                Mute
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+                <span>Volume</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={voiceVolume}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setVoiceVolume(v);
+                    bus.emit('voice:command', { type: 'VOICE_SET_VOLUME', volume: v });
+                  }}
+                />
+                <span className="text-xs text-slate-400">{Math.round(voiceVolume * 100)}%</span>
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+                <span>Rate</span>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  value={voiceRate}
+                  onChange={(e) => {
+                    const r = Number(e.target.value);
+                    setVoiceRate(r);
+                    bus.emit('voice:command', { type: 'VOICE_SET_RATE', rate: r });
+                  }}
+                />
+                <span className="text-xs text-slate-400">{voiceRate.toFixed(1)}x</span>
+              </label>
+              <button
+                type="button"
+                className={buttons.ghost}
+                onClick={() => bus.emit('voice:command', { type: 'VOICE_STOP' })}
+              >
+                Stop
+              </button>
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+            <h4 className={typography.smallHeading}>Last Spoken Indicator</h4>
+            <p className="mt-2 text-sm text-slate-300">
+              Mirrors what the dev voice driver says. Helps validate drop‑latest and milestone preemption.
+            </p>
+            <div className="mt-3 rounded-md border border-slate-800 bg-black p-4 text-center">
+              <span className="text-5xl font-extrabold text-slate-100">{voiceLast ?? '—'}</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="grid gap-3 md:grid-cols-2">
         <LogPanel title="Recent Commands" entries={commands.map(formatCommand)} />

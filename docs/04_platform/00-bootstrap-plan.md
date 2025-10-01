@@ -142,10 +142,20 @@ slow-burn/
    - Practice harness lets devs choose camera angle (front/side/back); the worker tunes heuristics per angle (rear view falls back to hip-vs-knee depth rather than knee angle).
    - Practice harness renders a camera preview plus a Pose Debug HUD so we can monitor heartbeat FPS, phase/state, and pose-lost status during manual QA.
 4. Dev voice driver + on‑screen cues
-   - Start with clear on‑screen cues in the harness/Practice screen.
-   - Add a dev‑only SpeechSynthesis fallback behind a flag for quick iteration.
+   - Start with clear on‑screen cues in the harness/Practice screen (e.g., a “last spoken” indicator alongside the big rep counter).
+   - Add an explicit “Prime audio” action that resumes the AudioContext on first user gesture to handle Safari/iOS autoplay gating.
+   - Implement a dev‑only SpeechSynthesis driver behind a flag (e.g., `VITE_VOICE_DEV_TTS=true`) with a minimal API: `prime()`, `handle(cue)`, `mute/unmute()`, `setVolume()`, `stopAll()`, `dispose()`.
+   - Dev adapter: subscribe to Practice `engine:event` and speak numbers on `REP_TICK` using a drop‑latest policy; allow milestone preemption at 10/20; expose mute/volume toggles in the harness.
+   - Scope note: This is the development path for Task 4. The spec‑aligned, Effect‑based VoiceAdapter and preloaded Web Audio assets will land in Task 5 when recorded audio is integrated.
+
+   Reasoning (short):
+   - Enables the fastest feedback loop to validate cue policy and perceived latency without waiting on asset ingestion.
+   - Keeps production‑bound work clean by introducing the Effect‑based interface alongside recorded assets (Task 5), avoiding a premature engine refactor.
+   - Handles iOS/Safari autoplay reliably via an explicit prime step; on‑screen cues ensure UX continuity if audio is blocked.
+   - Dev‑only TTS keeps iteration lightweight yet exercises the same policies (drop‑latest, milestone preemption) we’ll keep with Web Audio.
 5. Recorded audio + Workbox (later)
-   - Integrate recorded assets and an ingest script; wire the audio‑preload worker.
+   - Integrate recorded number/phrase assets and an ingest script; wire the audio‑preload worker.
+   - Swap the dev TTS path for the Web Audio path driven by preloaded buffers and the Effect‑based VoiceAdapter.
    - Tune PWA precache patterns once paths are stable.
 6. CI wiring
    - Add a GitHub Actions workflow to run lint, vitest, and (later) a Playwright smoke test.

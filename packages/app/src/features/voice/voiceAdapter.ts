@@ -1,0 +1,108 @@
+import type { EventBus } from '@/services/event-bus/eventBus';
+import type { VoiceAdapterCommand } from '@/services/event-bus/types';
+import { DevSpeechSynthesisVoiceDriver, type DevVoiceCue, type VoiceDriver } from './devVoiceDriver';
+
+const MILESTONE_REPS = [10, 20] as const;
+
+interface Options {
+  readonly enabled?: boolean;
+  readonly now?: () => number;
+}
+
+export function initializeDevVoiceAdapter(bus: EventBus, options: Options = {}) {
+  const now = options.now ?? (() => performance.now());
+  const enabled = Boolean(options.enabled);
+  if (!enabled) {
+    return () => undefined;
+  }
+
+  const driver: VoiceDriver = new DevSpeechSynthesisVoiceDriver();
+
+  const log = (message: string) => {
+    bus.emit('debug:log', { message: `voice: ${message}`, ts: now(), source: 'voice-adapter' });
+  };
+
+  const speak = (cue: DevVoiceCue) => {
+    // Drop-latest for numbers is enforced by the driver
+    driver.handle(cue);
+    const text = cue.type === 'say_number' ? cue.value : `milestone ${cue.value}`;
+    log(`spoke ${text}`);
+  };
+
+  const onEngineEvent = bus.subscribe('engine:event', (event) => {
+    switch (event.type) {
+      case 'REP_TICK': {
+        const n = event.repCount;
+        if (MILESTONE_REPS.includes(n as (typeof MILESTONE_REPS)[number])) {
+          // Preempt current number if speaking
+          if (driver.isSpeaking()) {
+            driver.stopAll();
+            log('preempt current utterance for milestone');
+          }
+          speak({ type: 'milestone', value: n });
+          break;
+        }
+
+        if (driver.isSpeaking()) {
+          log(`drop_latest ${n} (busy)`);
+          break;
+        }
+
+        speak({ type: 'say_number', value: n });
+        break;
+      }
+      case 'WORKOUT_STOPPED':
+      case 'WORKOUT_COMPLETE':
+        driver.stopAll();
+        log('stopped on session end');
+        break;
+      default:
+        break;
+    }
+  });
+
+  const onVoiceCommand = bus.subscribe('voice:command', (command: VoiceAdapterCommand) => {
+    switch (command.type) {
+      case 'VOICE_PRIME':
+        void driver.prime().then(() => {
+          log(driver.isPrimed() ? 'primed' : 'prime_pending');
+          if (driver.isBlocked()) log('blocked');
+        });
+        break;
+      case 'VOICE_MUTE':
+        if (command.mute) {
+          driver.mute();
+          log('muted on');
+        } else {
+          driver.unmute();
+          log('muted off');
+        }
+        break;
+      case 'VOICE_SET_VOLUME':
+        driver.setVolume(command.volume);
+        log(`volume ${Math.round(command.volume * 100) / 100}`);
+        break;
+      case 'VOICE_SET_RATE':
+        driver.setRate(command.rate);
+        log(`rate ${Math.round(command.rate * 100) / 100}`);
+        break;
+      case 'VOICE_STOP':
+        driver.stopAll();
+        log('stopped');
+        break;
+      default:
+        break;
+    }
+  });
+
+  log('initialized');
+
+  return () => {
+    onEngineEvent();
+    onVoiceCommand();
+    driver.dispose();
+    log('disposed');
+  };
+}
+
+export default initializeDevVoiceAdapter;
