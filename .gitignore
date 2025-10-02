@@ -28,5 +28,5 @@ dist-ssr
 .cursor
 
 # Pose tuning data (videos and processed metrics)
-packages/infra/pose-tuning/raw/
-packages/infra/pose-tuning/processed/
+pose-tuning/raw/
+pose-tuning/processed/

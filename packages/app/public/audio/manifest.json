@@ -1,0 +1,470 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-10-02T16:16:21.821Z",
+  "total_files": 66,
+  "total_size_bytes": 163924,
+  "assets": [
+    {
+      "id": "01",
+      "path": "audio/numbers/en/01.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "02",
+      "path": "audio/numbers/en/02.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "03",
+      "path": "audio/numbers/en/03.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "04",
+      "path": "audio/numbers/en/04.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "05",
+      "path": "audio/numbers/en/05.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "06",
+      "path": "audio/numbers/en/06.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "07",
+      "path": "audio/numbers/en/07.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "08",
+      "path": "audio/numbers/en/08.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "09",
+      "path": "audio/numbers/en/09.mp3",
+      "duration_ms": 100,
+      "size_bytes": 1190,
+      "type": "number"
+    },
+    {
+      "id": "10",
+      "path": "audio/numbers/en/10.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "11",
+      "path": "audio/numbers/en/11.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "12",
+      "path": "audio/numbers/en/12.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "13",
+      "path": "audio/numbers/en/13.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "14",
+      "path": "audio/numbers/en/14.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "15",
+      "path": "audio/numbers/en/15.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "16",
+      "path": "audio/numbers/en/16.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "17",
+      "path": "audio/numbers/en/17.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "18",
+      "path": "audio/numbers/en/18.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "19",
+      "path": "audio/numbers/en/19.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "number"
+    },
+    {
+      "id": "20",
+      "path": "audio/numbers/en/20.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "21",
+      "path": "audio/numbers/en/21.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "22",
+      "path": "audio/numbers/en/22.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "23",
+      "path": "audio/numbers/en/23.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "24",
+      "path": "audio/numbers/en/24.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "25",
+      "path": "audio/numbers/en/25.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "26",
+      "path": "audio/numbers/en/26.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "27",
+      "path": "audio/numbers/en/27.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "28",
+      "path": "audio/numbers/en/28.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "29",
+      "path": "audio/numbers/en/29.mp3",
+      "duration_ms": 450,
+      "size_bytes": 2646,
+      "type": "number"
+    },
+    {
+      "id": "30",
+      "path": "audio/numbers/en/30.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "31",
+      "path": "audio/numbers/en/31.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "32",
+      "path": "audio/numbers/en/32.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "33",
+      "path": "audio/numbers/en/33.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "34",
+      "path": "audio/numbers/en/34.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "35",
+      "path": "audio/numbers/en/35.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "36",
+      "path": "audio/numbers/en/36.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "37",
+      "path": "audio/numbers/en/37.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "38",
+      "path": "audio/numbers/en/38.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "39",
+      "path": "audio/numbers/en/39.mp3",
+      "duration_ms": 600,
+      "size_bytes": 3166,
+      "type": "number"
+    },
+    {
+      "id": "40",
+      "path": "audio/numbers/en/40.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "41",
+      "path": "audio/numbers/en/41.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "42",
+      "path": "audio/numbers/en/42.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "43",
+      "path": "audio/numbers/en/43.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "44",
+      "path": "audio/numbers/en/44.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "45",
+      "path": "audio/numbers/en/45.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "46",
+      "path": "audio/numbers/en/46.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "47",
+      "path": "audio/numbers/en/47.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "48",
+      "path": "audio/numbers/en/48.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "49",
+      "path": "audio/numbers/en/49.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "50",
+      "path": "audio/numbers/en/50.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3790,
+      "type": "number"
+    },
+    {
+      "id": "1",
+      "path": "audio/ui/1.mp3",
+      "duration_ms": 150,
+      "size_bytes": 1424,
+      "type": "phrase"
+    },
+    {
+      "id": "2",
+      "path": "audio/ui/2.mp3",
+      "duration_ms": 150,
+      "size_bytes": 1424,
+      "type": "phrase"
+    },
+    {
+      "id": "3",
+      "path": "audio/ui/3.mp3",
+      "duration_ms": 150,
+      "size_bytes": 1424,
+      "type": "phrase"
+    },
+    {
+      "id": "final5",
+      "path": "audio/ui/final5.mp3",
+      "duration_ms": 750,
+      "size_bytes": 3816,
+      "type": "phrase"
+    },
+    {
+      "id": "go",
+      "path": "audio/ui/go.mp3",
+      "duration_ms": 200,
+      "size_bytes": 1606,
+      "type": "phrase"
+    },
+    {
+      "id": "halfway",
+      "path": "audio/ui/halfway.mp3",
+      "duration_ms": 500,
+      "size_bytes": 2880,
+      "type": "phrase"
+    },
+    {
+      "id": "next_burpees",
+      "path": "audio/ui/next_burpees.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_high_knees",
+      "path": "audio/ui/next_high_knees.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_mountain_climbers",
+      "path": "audio/ui/next_mountain_climbers.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_push_ups",
+      "path": "audio/ui/next_push_ups.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_russian_twist",
+      "path": "audio/ui/next_russian_twist.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_seated_knee_tuck",
+      "path": "audio/ui/next_seated_knee_tuck.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_side_plank_dip",
+      "path": "audio/ui/next_side_plank_dip.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_squats",
+      "path": "audio/ui/next_squats.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "next_up_down_plank",
+      "path": "audio/ui/next_up_down_plank.mp3",
+      "duration_ms": 300,
+      "size_bytes": 2022,
+      "type": "phrase"
+    },
+    {
+      "id": "rest_15s",
+      "path": "audio/ui/rest_15s.mp3",
+      "duration_ms": 400,
+      "size_bytes": 2412,
+      "type": "phrase"
+    }
+  ]
+}
