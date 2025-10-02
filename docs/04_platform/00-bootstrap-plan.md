@@ -141,7 +141,7 @@ slow-burn/
    - MoveNet Lightning (tfjs) runs inside the worker; squat angle heuristics emit `REP_COMPLETE`/`POSE_LOST` events with confidence values for storage/UI debugging.
    - Practice harness lets devs choose camera angle (front/side/back); the worker tunes heuristics per angle (rear view falls back to hip-vs-knee depth rather than knee angle).
    - Practice harness renders a camera preview plus a Pose Debug HUD so we can monitor heartbeat FPS, phase/state, and pose-lost status during manual QA.
-4. Dev voice driver + on‑screen cues
+4. ✅ Dev voice driver + on‑screen cues
    - Start with clear on‑screen cues in the harness/Practice screen (e.g., a “last spoken” indicator alongside the big rep counter).
    - Add an explicit “Prime audio” action that resumes the AudioContext on first user gesture to handle Safari/iOS autoplay gating.
    - Implement a dev‑only SpeechSynthesis driver behind a flag (e.g., `VITE_VOICE_DEV_TTS=true`) with a minimal API: `prime()`, `handle(cue)`, `mute/unmute()`, `setVolume()`, `stopAll()`, `dispose()`.
@@ -153,10 +153,14 @@ slow-burn/
    - Keeps production‑bound work clean by introducing the Effect‑based interface alongside recorded assets (Task 5), avoiding a premature engine refactor.
    - Handles iOS/Safari autoplay reliably via an explicit prime step; on‑screen cues ensure UX continuity if audio is blocked.
    - Dev‑only TTS keeps iteration lightweight yet exercises the same policies (drop‑latest, milestone preemption) we’ll keep with Web Audio.
-5. Recorded audio + Workbox (later)
-   - Integrate recorded number/phrase assets and an ingest script; wire the audio‑preload worker.
-   - Swap the dev TTS path for the Web Audio path driven by preloaded buffers and the Effect‑based VoiceAdapter.
-   - Tune PWA precache patterns once paths are stable.
+5. Recorded audio + Web Audio VoiceDriver (see `docs/04_platform/09-task-5-audio-plan.md`)
+   - Generate placeholder audio assets (beeps) for development using Web Audio API oscillators.
+   - Create asset ingestion pipeline for future TTS-generated audio files (normalize, encode, validate).
+   - Implement `WebAudioVoiceDriver` with AudioContext lifecycle, buffer pool preloading (main thread), and queue logic (drop-latest, milestone/final-rep preemption, de-dup).
+   - Update `VoiceRuntimeBridge` with feature detection: Web Audio (primary) → Dev TTS (flag fallback) → Silent (production fallback).
+   - Add unit tests with mocked AudioContext/AudioBuffer; validate drop-latest, preemption, and de-dup policies.
+   - Configure Workbox to precache `/audio/**` assets with cache-first strategy.
+   - Document audio asset requirements (LUFS, duration limits, file structure) in `docs/04_platform/08-audio-asset-guide.md`.
 6. CI wiring
    - Add a GitHub Actions workflow to run lint, vitest, and (later) a Playwright smoke test.
 
