@@ -47,19 +47,26 @@ export function PracticeHarness() {
   const [poseMetrics, setPoseMetrics] = useState<PoseDebugMetrics>({});
   const [cameraAngle, setCameraAngle] = useState<CameraAngle>('front');
 
-  // Dev voice (SpeechSynthesis) state
+  // Voice state
   function parseBooleanFlag(value: string | undefined, defaultValue: boolean): boolean {
     if (value == null) return defaultValue;
     const normalized = value.trim().toLowerCase();
     return !(normalized === 'false' || normalized === '0' || normalized === 'off' || normalized === 'no');
   }
-  const devTtsEnabled = import.meta.env.DEV && parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, true);
+  const devTtsEnabled = import.meta.env.DEV && parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, false);
+  const webAudioEnabled = parseBooleanFlag(import.meta.env.VITE_VOICE_WEB_AUDIO, true);
+  const voiceDriver = webAudioEnabled ? 'Web Audio' : devTtsEnabled ? 'Dev TTS' : 'Silent';
+
   const [voicePrimed, setVoicePrimed] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [voiceVolume, setVoiceVolume] = useState(1);
   const [voiceRate, setVoiceRate] = useState(1);
   const [voiceLast, setVoiceLast] = useState<string | null>(null);
   const [voiceBlocked, setVoiceBlocked] = useState(false);
+  const [voiceDecodeProgress, setVoiceDecodeProgress] = useState(0);
+  const [voiceBufferCount, setVoiceBufferCount] = useState(0);
+  const [voiceP95, setVoiceP95] = useState(0);
+  const [voiceCaption, setVoiceCaption] = useState<string | null>(null);
 
   useEventSubscription('engine:event', (event) => {
     setEvents((prev) => [event, ...prev].slice(0, MAX_LOG_ENTRIES));
@@ -149,7 +156,7 @@ export function PracticeHarness() {
     }
   });
 
-  // Parse dev voice debug logs to keep simple telemetry for HUD
+  // Parse voice debug logs to keep simple telemetry for HUD
   useEventSubscription('debug:log', ({ message, source }) => {
     if (source !== 'voice-adapter' || !message.startsWith('voice:')) return;
     const text = message.slice('voice:'.length).trim();
@@ -165,9 +172,28 @@ export function PracticeHarness() {
       const r = Number(text.split(' ')[1]);
       if (!Number.isNaN(r)) setVoiceRate(r);
     }
-    if (text.startsWith('spoke')) {
-      setVoiceLast(text.replace('spoke', '').trim());
+    if (text.startsWith('spoke') || text.startsWith('caption')) {
+      setVoiceLast(text.split(' ').slice(1).join(' '));
     }
+  });
+
+  // Voice telemetry (Web Audio driver)
+  useEventSubscription('voice:telemetry', ({ p95, bufferCount, blocked }) => {
+    setVoiceP95(p95);
+    setVoiceBufferCount(bufferCount);
+    setVoiceBlocked(blocked);
+  });
+
+  // Voice decode progress (Web Audio driver)
+  useEventSubscription('voice:decode_progress', ({ percent }) => {
+    setVoiceDecodeProgress(percent);
+  });
+
+  // Voice captions (when blocked)
+  useEventSubscription('voice:caption', ({ text }) => {
+    setVoiceCaption(text);
+    // Clear caption after 2 seconds
+    setTimeout(() => setVoiceCaption(null), 2000);
   });
 
   const emitCommand = useCallback(
@@ -569,14 +595,14 @@ export function PracticeHarness() {
         <PoseDebugPanel metrics={poseMetrics} poseLost={poseLost} status={poseStatus} />
       </section>
 
-      {devTtsEnabled && (
+      {import.meta.env.DEV && (
         <section className="grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
-            <h4 className={typography.smallHeading}>Voice (Dev)</h4>
+            <h4 className={typography.smallHeading}>Voice</h4>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div>
-                <dt className="text-slate-400">Dev TTS</dt>
-                <dd className="font-medium text-slate-100">Enabled</dd>
+                <dt className="text-slate-400">Driver</dt>
+                <dd className="font-medium text-slate-100">{voiceDriver}</dd>
               </div>
               <div>
                 <dt className="text-slate-400">Primed</dt>
@@ -590,7 +616,25 @@ export function PracticeHarness() {
                 <dt className="text-slate-400">Blocked</dt>
                 <dd className="font-medium text-slate-100">{voiceBlocked ? 'Yes' : 'No'}</dd>
               </div>
-              <div className="col-span-2">
+              {voiceDriver === 'Web Audio' && (
+                <>
+                  <div>
+                    <dt className="text-slate-400">Decode Progress</dt>
+                    <dd className="font-medium text-slate-100">{voiceDecodeProgress}%</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-400">Buffers Loaded</dt>
+                    <dd className="font-medium text-slate-100">{voiceBufferCount}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-400">Latency (p95)</dt>
+                    <dd className={`font-medium ${voiceP95 > 150 ? 'text-rose-300' : 'text-slate-100'}`}>
+                      {voiceP95 ? `${Math.round(voiceP95)}ms` : '—'}
+                    </dd>
+                  </div>
+                </>
+              )}
+              <div className={voiceDriver === 'Web Audio' ? '' : 'col-span-2'}>
                 <dt className="text-slate-400">Last spoken</dt>
                 <dd className="font-medium text-slate-100">{voiceLast ?? '—'}</dd>
               </div>
@@ -671,6 +715,15 @@ export function PracticeHarness() {
         <LogPanel title="Recent Commands" entries={commands.map(formatCommand)} />
         <LogPanel title="Engine Events" entries={events.map(formatEvent)} />
       </section>
+
+      {/* Caption overlay when voice is blocked */}
+      {voiceBlocked && voiceCaption && (
+        <div className="fixed right-0 bottom-20 left-0 z-50 flex justify-center">
+          <div className="rounded-lg bg-slate-900/90 px-6 py-3 text-2xl font-bold text-white shadow-lg">
+            {voiceCaption}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

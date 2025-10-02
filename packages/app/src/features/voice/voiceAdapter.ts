@@ -6,6 +6,7 @@ const MILESTONE_REPS = [10, 20] as const;
 
 interface Options {
   readonly enabled?: boolean;
+  readonly driver?: VoiceDriver;
   readonly now?: () => number;
 }
 
@@ -16,16 +17,32 @@ export function initializeDevVoiceAdapter(bus: EventBus, options: Options = {}) 
     return () => undefined;
   }
 
-  const driver: VoiceDriver = new DevSpeechSynthesisVoiceDriver();
+  const driver: VoiceDriver = options.driver ?? new DevSpeechSynthesisVoiceDriver();
 
   const log = (message: string) => {
     bus.emit('debug:log', { message: `voice: ${message}`, ts: now(), source: 'voice-adapter' });
   };
 
   const speak = (cue: DevVoiceCue) => {
+    const text = String(cue.value);
+
+    // If driver is blocked, show caption and vibrate for milestones
+    if (driver.isBlocked()) {
+      bus.emit('voice:caption', { text });
+
+      // Vibrate for milestones
+      if (cue.type === 'milestone') {
+        if ('vibrate' in navigator) {
+          navigator.vibrate([100]);
+        }
+      }
+
+      log(`caption ${text} (blocked)`);
+      return;
+    }
+
     // Drop-latest for numbers is enforced by the driver
     driver.handle(cue);
-    const text = cue.type === 'say_number' ? cue.value : `milestone ${cue.value}`;
     log(`spoke ${text}`);
   };
 

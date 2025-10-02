@@ -7,6 +7,9 @@ export type AppEventMap = {
   'pose:event': PoseWorkerEvent;
   'pose:command': PoseAdapterCommand;
   'voice:command': VoiceAdapterCommand;
+  'voice:telemetry': VoiceTelemetry;
+  'voice:decode_progress': VoiceDecodeProgress;
+  'voice:caption': VoiceCaption;
   'debug:log': { message: string; ts: number; source?: string };
 };
 
@@ -27,6 +30,23 @@ export type VoiceAdapterCommand =
   | { type: 'VOICE_SET_VOLUME'; volume: number }
   | { type: 'VOICE_SET_RATE'; rate: number }
   | { type: 'VOICE_STOP' };
+
+export type VoiceTelemetry = {
+  latency: number;
+  p95: number;
+  bufferCount: number;
+  blocked: boolean;
+};
+
+export type VoiceDecodeProgress = {
+  loaded: number;
+  total: number;
+  percent: number;
+};
+
+export type VoiceCaption = {
+  text: string;
+};
 
 export type AppEventKey = keyof AppEventMap;
 export type AppEventPayload<K extends AppEventKey> = AppEventMap[K];

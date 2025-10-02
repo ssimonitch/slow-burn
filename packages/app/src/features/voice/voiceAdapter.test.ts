@@ -105,7 +105,7 @@ describe('dev voice adapter', () => {
       ts: 1,
     });
     expect(logs.some((m) => m.includes('preempt current utterance for milestone'))).toBe(true);
-    expect(logs.some((m) => m.includes('spoke milestone 10'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 10'))).toBe(true);
   });
 
   it('stops on session end', () => {
@@ -262,7 +262,7 @@ describe('dev voice adapter', () => {
       ts: 2,
     });
     expect(logs.some((m) => m.includes('preempt'))).toBe(true);
-    expect(logs.some((m) => m.includes('spoke milestone 10'))).toBe(true);
+    expect(logs.some((m) => m.includes('spoke 10'))).toBe(true);
   });
 
   it('handles rapid-fire reps with final rep preemption', () => {
