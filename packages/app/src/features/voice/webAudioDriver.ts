@@ -144,14 +144,27 @@ export class WebAudioVoiceDriver implements VoiceDriver {
       try {
         const url = `${baseUrl}${asset.path}`;
         const response = await fetch(url);
+
+        if (!response.ok) {
+          console.warn(`[WebAudioVoiceDriver] Failed to fetch ${id}: ${response.status}`);
+          continue;
+        }
+
         const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.audioCtx!.decodeAudioData(arrayBuffer);
+
+        // Check if audioCtx still exists (may be disposed during async ops)
+        if (!this.audioCtx) {
+          continue;
+        }
+
+        const audioBuffer = await this.audioCtx.decodeAudioData(arrayBuffer);
         this.buffers.set(id, audioBuffer);
 
         // Emit progress
         this.emitProgress(this.buffers.size, manifest.total_files);
       } catch (error) {
-        console.error(`[WebAudioVoiceDriver] Failed to decode ${id}:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn(`[WebAudioVoiceDriver] Failed to decode ${id}:`, errorMessage);
       }
     }
   }
