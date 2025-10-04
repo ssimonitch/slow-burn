@@ -43,7 +43,7 @@ export function PracticeHarness() {
   const [poseStatus, setPoseStatus] = useState<PosePipelineStatus>('idle');
   const [poseError, setPoseError] = useState<string | null>(null);
   const [poseLost, setPoseLost] = useState(false);
-  const [poseDebugEnabled, setPoseDebugEnabled] = useState(import.meta.env.DEV);
+  const [poseDebugEnabled, setPoseDebugEnabled] = useState(false);
   const [poseMetrics, setPoseMetrics] = useState<PoseDebugMetrics>({});
   const [cameraAngle, setCameraAngle] = useState<CameraAngle>('front');
 
@@ -53,7 +53,7 @@ export function PracticeHarness() {
     const normalized = value.trim().toLowerCase();
     return !(normalized === 'false' || normalized === '0' || normalized === 'off' || normalized === 'no');
   }
-  const devTtsEnabled = import.meta.env.DEV && parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, false);
+  const devTtsEnabled = parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, false);
   const webAudioEnabled = parseBooleanFlag(import.meta.env.VITE_VOICE_WEB_AUDIO, true);
 
   const [voicePrimed, setVoicePrimed] = useState(false);
@@ -611,117 +611,115 @@ export function PracticeHarness() {
         <PoseDebugPanel metrics={poseMetrics} poseLost={poseLost} status={poseStatus} />
       </section>
 
-      {import.meta.env.DEV && (
-        <section className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
-            <h4 className={typography.smallHeading}>Voice</h4>
-            <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <dt className="text-slate-400">Driver</dt>
-                <dd className="font-medium text-slate-100">{voiceDriver}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Primed</dt>
-                <dd className="font-medium text-slate-100">{voicePrimed ? 'Yes' : 'No'}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-400">Muted</dt>
-                <dd className="font-medium text-slate-100">{voiceMuted ? 'Yes' : 'No'}</dd>
-              </div>
-              {voiceDriver === 'Web Audio' && (
-                <>
-                  <div>
-                    <dt className="text-slate-400">Decode Progress</dt>
-                    <dd className="font-medium text-slate-100">{voiceDecodeProgress}%</dd>
-                  </div>
-                  <div>
-                    <dt className="text-slate-400">Buffers Loaded</dt>
-                    <dd className="font-medium text-slate-100">{voiceBufferCount}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-slate-400">Latency (p95)</dt>
-                    <dd className={`font-medium ${voiceP95 > 150 ? 'text-rose-300' : 'text-slate-100'}`}>
-                      {voiceP95 ? `${Math.round(voiceP95)}ms` : '—'}
-                    </dd>
-                  </div>
-                </>
-              )}
-              <div className={voiceDriver === 'Web Audio' ? '' : 'col-span-2'}>
-                <dt className="text-slate-400">Last spoken</dt>
-                <dd className="font-medium text-slate-100">{voiceLast ?? '—'}</dd>
-              </div>
-            </dl>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className={buttons.secondary}
-                onClick={() => bus.emit('voice:command', { type: 'VOICE_PRIME' })}
-              >
-                Prime Voice
-              </button>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={voiceMuted}
-                  onChange={(e) => {
-                    setVoiceMuted(e.target.checked);
-                    bus.emit('voice:command', { type: 'VOICE_MUTE', mute: e.target.checked });
-                  }}
-                />
-                Mute
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
-                <span>Volume</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={voiceVolume}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setVoiceVolume(v);
-                    bus.emit('voice:command', { type: 'VOICE_SET_VOLUME', volume: v });
-                  }}
-                />
-                <span className="text-xs text-slate-400">{Math.round(voiceVolume * 100)}%</span>
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-slate-200">
-                <span>Rate</span>
-                <input
-                  type="range"
-                  min={0.5}
-                  max={2}
-                  step={0.1}
-                  value={voiceRate}
-                  onChange={(e) => {
-                    const r = Number(e.target.value);
-                    setVoiceRate(r);
-                    bus.emit('voice:command', { type: 'VOICE_SET_RATE', rate: r });
-                  }}
-                />
-                <span className="text-xs text-slate-400">{voiceRate.toFixed(1)}x</span>
-              </label>
-              <button
-                type="button"
-                className={buttons.ghost}
-                onClick={() => bus.emit('voice:command', { type: 'VOICE_STOP' })}
-              >
-                Stop
-              </button>
+      <section className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+          <h4 className={typography.smallHeading}>Voice</h4>
+          <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <dt className="text-slate-400">Driver</dt>
+              <dd className="font-medium text-slate-100">{voiceDriver}</dd>
             </div>
-          </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
-            <h4 className={typography.smallHeading}>Last Spoken Indicator</h4>
-            <p className="mt-2 text-sm text-slate-300">
-              Mirrors what the dev voice driver says. Helps validate drop‑latest and milestone preemption.
-            </p>
-            <div className="mt-3 rounded-md border border-slate-800 bg-black p-4 text-center">
-              <span className="text-5xl font-extrabold text-slate-100">{voiceLast ?? '—'}</span>
+            <div>
+              <dt className="text-slate-400">Primed</dt>
+              <dd className="font-medium text-slate-100">{voicePrimed ? 'Yes' : 'No'}</dd>
             </div>
+            <div>
+              <dt className="text-slate-400">Muted</dt>
+              <dd className="font-medium text-slate-100">{voiceMuted ? 'Yes' : 'No'}</dd>
+            </div>
+            {voiceDriver === 'Web Audio' && (
+              <>
+                <div>
+                  <dt className="text-slate-400">Decode Progress</dt>
+                  <dd className="font-medium text-slate-100">{voiceDecodeProgress}%</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Buffers Loaded</dt>
+                  <dd className="font-medium text-slate-100">{voiceBufferCount}</dd>
+                </div>
+                <div>
+                  <dt className="text-slate-400">Latency (p95)</dt>
+                  <dd className={`font-medium ${voiceP95 > 150 ? 'text-rose-300' : 'text-slate-100'}`}>
+                    {voiceP95 ? `${Math.round(voiceP95)}ms` : '—'}
+                  </dd>
+                </div>
+              </>
+            )}
+            <div className={voiceDriver === 'Web Audio' ? '' : 'col-span-2'}>
+              <dt className="text-slate-400">Last spoken</dt>
+              <dd className="font-medium text-slate-100">{voiceLast ?? '—'}</dd>
+            </div>
+          </dl>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className={buttons.secondary}
+              onClick={() => bus.emit('voice:command', { type: 'VOICE_PRIME' })}
+            >
+              Prime Voice
+            </button>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+              <input
+                type="checkbox"
+                checked={voiceMuted}
+                onChange={(e) => {
+                  setVoiceMuted(e.target.checked);
+                  bus.emit('voice:command', { type: 'VOICE_MUTE', mute: e.target.checked });
+                }}
+              />
+              Mute
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+              <span>Volume</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.1}
+                value={voiceVolume}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setVoiceVolume(v);
+                  bus.emit('voice:command', { type: 'VOICE_SET_VOLUME', volume: v });
+                }}
+              />
+              <span className="text-xs text-slate-400">{Math.round(voiceVolume * 100)}%</span>
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-200">
+              <span>Rate</span>
+              <input
+                type="range"
+                min={0.5}
+                max={2}
+                step={0.1}
+                value={voiceRate}
+                onChange={(e) => {
+                  const r = Number(e.target.value);
+                  setVoiceRate(r);
+                  bus.emit('voice:command', { type: 'VOICE_SET_RATE', rate: r });
+                }}
+              />
+              <span className="text-xs text-slate-400">{voiceRate.toFixed(1)}x</span>
+            </label>
+            <button
+              type="button"
+              className={buttons.ghost}
+              onClick={() => bus.emit('voice:command', { type: 'VOICE_STOP' })}
+            >
+              Stop
+            </button>
           </div>
-        </section>
-      )}
+        </div>
+        <div className="rounded-lg border border-slate-800 bg-slate-950/30 p-4">
+          <h4 className={typography.smallHeading}>Last Spoken Indicator</h4>
+          <p className="mt-2 text-sm text-slate-300">
+            Mirrors what the dev voice driver says. Helps validate drop‑latest and milestone preemption.
+          </p>
+          <div className="mt-3 rounded-md border border-slate-800 bg-black p-4 text-center">
+            <span className="text-5xl font-extrabold text-slate-100">{voiceLast ?? '—'}</span>
+          </div>
+        </div>
+      </section>
 
       <section className="grid gap-3 md:grid-cols-2">
         <LogPanel title="Recent Commands" entries={commands.map(formatCommand)} />

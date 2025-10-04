@@ -21,8 +21,9 @@ export default defineConfig({
         enabled: true,
         type: 'module',
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,mp3,webmanifest}', 'assets/models/**/*.json'],
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,json}', '**/*.{mp3,ogg}', 'audio/**/*'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB (accommodates audio)
       },
     }),
   ],
