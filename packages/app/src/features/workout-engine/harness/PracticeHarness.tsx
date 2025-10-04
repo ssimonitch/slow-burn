@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { buttons, typography } from '@/app/theme';
 import { useEventBus, useEventSubscription } from '@/services/event-bus';
@@ -55,18 +55,25 @@ export function PracticeHarness() {
   }
   const devTtsEnabled = import.meta.env.DEV && parseBooleanFlag(import.meta.env.VITE_VOICE_DEV_TTS, false);
   const webAudioEnabled = parseBooleanFlag(import.meta.env.VITE_VOICE_WEB_AUDIO, true);
-  const voiceDriver = webAudioEnabled ? 'Web Audio' : devTtsEnabled ? 'Dev TTS' : 'Silent';
 
   const [voicePrimed, setVoicePrimed] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [voiceVolume, setVoiceVolume] = useState(1);
   const [voiceRate, setVoiceRate] = useState(1);
   const [voiceLast, setVoiceLast] = useState<string | null>(null);
-  const [voiceBlocked, setVoiceBlocked] = useState(false);
   const [voiceDecodeProgress, setVoiceDecodeProgress] = useState(0);
   const [voiceBufferCount, setVoiceBufferCount] = useState(0);
   const [voiceP95, setVoiceP95] = useState(0);
   const [voiceCaption, setVoiceCaption] = useState<string | null>(null);
+
+  // Derive driver label from runtime state
+  const voiceDriver = useMemo(() => {
+    // If Web Audio is enabled but not primed, it may need user gesture
+    if (webAudioEnabled && !voicePrimed) {
+      return 'Web Audio (not primed)';
+    }
+    return webAudioEnabled ? 'Web Audio' : devTtsEnabled ? 'Dev TTS' : 'Silent';
+  }, [webAudioEnabled, devTtsEnabled, voicePrimed]);
 
   useEventSubscription('engine:event', (event) => {
     setEvents((prev) => [event, ...prev].slice(0, MAX_LOG_ENTRIES));
@@ -161,7 +168,6 @@ export function PracticeHarness() {
     if (source !== 'voice-adapter' || !message.startsWith('voice:')) return;
     const text = message.slice('voice:'.length).trim();
     if (text === 'primed') setVoicePrimed(true);
-    if (text === 'blocked') setVoiceBlocked(true);
     if (text === 'muted on') setVoiceMuted(true);
     if (text === 'muted off') setVoiceMuted(false);
     if (text.startsWith('volume')) {
@@ -178,10 +184,9 @@ export function PracticeHarness() {
   });
 
   // Voice telemetry (Web Audio driver)
-  useEventSubscription('voice:telemetry', ({ p95, bufferCount, blocked }) => {
+  useEventSubscription('voice:telemetry', ({ p95, bufferCount }) => {
     setVoiceP95(p95);
     setVoiceBufferCount(bufferCount);
-    setVoiceBlocked(blocked);
   });
 
   // Voice decode progress (Web Audio driver)
@@ -192,9 +197,20 @@ export function PracticeHarness() {
   // Voice captions (when blocked)
   useEventSubscription('voice:caption', ({ text }) => {
     setVoiceCaption(text);
-    // Clear caption after 2 seconds
-    setTimeout(() => setVoiceCaption(null), 2000);
   });
+
+  // Clear caption after 2 seconds with proper cleanup
+  useEffect(() => {
+    if (voiceCaption === null) return;
+
+    const timeoutId = setTimeout(() => {
+      setVoiceCaption(null);
+    }, 2000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [voiceCaption]);
 
   const emitCommand = useCallback(
     (command: EngineCommand) => {
@@ -612,10 +628,6 @@ export function PracticeHarness() {
                 <dt className="text-slate-400">Muted</dt>
                 <dd className="font-medium text-slate-100">{voiceMuted ? 'Yes' : 'No'}</dd>
               </div>
-              <div>
-                <dt className="text-slate-400">Blocked</dt>
-                <dd className="font-medium text-slate-100">{voiceBlocked ? 'Yes' : 'No'}</dd>
-              </div>
               {voiceDriver === 'Web Audio' && (
                 <>
                   <div>
@@ -716,8 +728,8 @@ export function PracticeHarness() {
         <LogPanel title="Engine Events" entries={events.map(formatEvent)} />
       </section>
 
-      {/* Caption overlay when voice is blocked */}
-      {voiceBlocked && voiceCaption && (
+      {/* Caption overlay */}
+      {voiceCaption && (
         <div className="fixed right-0 bottom-20 left-0 z-50 flex justify-center">
           <div className="rounded-lg bg-slate-900/90 px-6 py-3 text-2xl font-bold text-white shadow-lg">
             {voiceCaption}

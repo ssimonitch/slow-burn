@@ -88,9 +88,9 @@ describe('PracticeHarness', () => {
         </EventBusProvider>,
       );
 
-      // Initially not primed
-      const primedText = screen.getByText(/primed/i);
-      expect(primedText.parentElement?.textContent).toMatch(/no/i);
+      // Initially not primed - query for exact "Primed" label to avoid matching "Web Audio (not primed)"
+      const primedLabel = screen.getByText('Primed');
+      expect(primedLabel.parentElement?.textContent).toMatch(/no/i);
 
       // Click prime button
       await user.click(screen.getByRole('button', { name: /prime voice/i }));
@@ -98,7 +98,7 @@ describe('PracticeHarness', () => {
       // Wait for primed status to update
       await waitFor(
         () => {
-          const primedStatus = screen.getByText(/primed/i);
+          const primedStatus = screen.getByText('Primed');
           expect(primedStatus.parentElement?.textContent).toMatch(/yes/i);
         },
         { timeout: 1500 },

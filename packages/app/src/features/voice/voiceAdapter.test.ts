@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppEventKey, AppEventListener } from '@/services/event-bus';
 import type { EventBus } from '@/services/event-bus/eventBus';
 import { installSpeechSynthesisPolyfill, restoreSpeechSynthesis } from '@/test/speechSynthesisPolyfill';
+import type { VoiceDriver } from './devVoiceDriver';
 import { initializeDevVoiceAdapter } from './voiceAdapter';
 
 class MockBus implements EventBus {
@@ -364,6 +365,98 @@ describe('dev voice adapter', () => {
     });
     expect(logs.some((m) => m.includes('drop_latest 5'))).toBe(true);
     expect(logs.some((m) => m.includes('preempt for final rep'))).toBe(false);
+  });
+
+  it('emits captions and vibrates when driver is blocked', () => {
+    const bus = new MockBus();
+    const logs: string[] = [];
+    const captions: string[] = [];
+    const vibratePattern: number[][] = [];
+
+    bus.subscribe('debug:log', ({ message, source }) => {
+      if (source === 'voice-adapter') logs.push(message);
+    });
+
+    bus.subscribe('voice:caption', ({ text }) => {
+      captions.push(text);
+    });
+
+    // Mock navigator.vibrate
+    const originalNavigator = globalThis.navigator;
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        ...originalNavigator,
+        vibrate: vi.fn((pattern: number | number[]) => {
+          vibratePattern.push(Array.isArray(pattern) ? pattern : [pattern]);
+          return true;
+        }),
+      },
+      configurable: true,
+    });
+
+    // Create a mock blocked driver
+    const mockDriver: VoiceDriver = {
+      prime: vi.fn().mockResolvedValue(undefined),
+      handle: vi.fn(),
+      mute: vi.fn(),
+      unmute: vi.fn(),
+      setVolume: vi.fn(),
+      setRate: vi.fn(),
+      stopAll: vi.fn(),
+      dispose: vi.fn(),
+      isSpeaking: vi.fn().mockReturnValue(false),
+      isPrimed: vi.fn().mockReturnValue(false),
+      isBlocked: vi.fn().mockReturnValue(true),
+      getLastSpoken: vi.fn().mockReturnValue(null),
+    };
+
+    initializeDevVoiceAdapter(bus, { enabled: true, driver: mockDriver, now: () => 10000 });
+
+    // Start a set
+    bus.emit('engine:event', {
+      type: 'SET_STARTED',
+      sessionId: 's',
+      setIndex: 0,
+      exercise: 'squat',
+      targetType: 'reps',
+      goalValue: 10,
+      startedAt: 0,
+      ts: 0,
+    });
+
+    // Rep 1 (regular number) - should emit caption only
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 1,
+      totalReps: 1,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 1,
+    });
+
+    expect(captions).toContain('1');
+    expect(vibratePattern).toHaveLength(0); // No vibration for regular numbers
+    expect(logs.some((m) => m.includes('caption 1 (blocked)'))).toBe(true);
+
+    // Rep 10 (milestone) - should emit caption AND vibrate
+    bus.emit('engine:event', {
+      type: 'REP_TICK',
+      repCount: 10,
+      totalReps: 10,
+      setIndex: 0,
+      sessionId: 's',
+      ts: 2,
+    });
+
+    expect(captions).toContain('10');
+    expect(vibratePattern).toContainEqual([100]); // Milestone should vibrate
+    expect(logs.some((m) => m.includes('caption 10 (blocked)'))).toBe(true);
+
+    // Restore navigator
+    Object.defineProperty(globalThis, 'navigator', {
+      value: originalNavigator,
+      configurable: true,
+    });
   });
 
   it('resets goal tracking correctly across multiple sets', () => {

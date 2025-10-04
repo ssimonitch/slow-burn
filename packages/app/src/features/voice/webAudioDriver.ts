@@ -1,6 +1,8 @@
 import type { DevVoiceCue, VoiceDriver } from './devVoiceDriver';
 import type { EventBus } from '@/services/event-bus/eventBus';
 
+const MAX_LATENCY_SAMPLES = 30;
+
 type AudioManifest = {
   version: string;
   generated_at: string;
@@ -34,7 +36,6 @@ export class WebAudioVoiceDriver implements VoiceDriver {
   private currentSource: AudioBufferSourceNode | null = null;
 
   private primed = false;
-  private blocked = false;
   private muted = false;
   private volume = 1;
   private rate = 1;
@@ -62,10 +63,17 @@ export class WebAudioVoiceDriver implements VoiceDriver {
    * 6. Stage 3: Decode numbers 31-50 + Circuit phrases in background
    */
   async prime(): Promise<void> {
-    if (typeof window === 'undefined' || !('AudioContext' in window)) {
-      this.blocked = true;
+    // Guard against re-entry to prevent AudioContext leaks
+    if (this.primed || this.audioCtx) {
       return;
     }
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Fresh session state
+    this.latencies = [];
 
     try {
       // Create AudioContext
@@ -93,11 +101,22 @@ export class WebAudioVoiceDriver implements VoiceDriver {
 
       // Check if context is running
       if (this.audioCtx.state !== 'running') {
-        this.blocked = true;
+        // Clean up so retry can work
+        if (this.audioCtx) {
+          try {
+            await this.audioCtx.close();
+          } catch {
+            // ignore close errors
+          }
+        }
+        this.audioCtx = null;
+        this.gainNode = null;
+        this.emitTelemetry();
         return;
       }
 
       this.primed = true;
+      this.emitTelemetry();
 
       // Stage 2: Common range (11-30) - background
       const commonIds = Array.from({ length: 20 }, (_, i) => String(i + 11).padStart(2, '0'));
@@ -126,7 +145,17 @@ export class WebAudioVoiceDriver implements VoiceDriver {
       this.decodeBatch([...highIds, ...circuitIds], manifest, baseUrl); // don't await
     } catch (error) {
       console.error('[WebAudioVoiceDriver] Prime failed:', error);
-      this.blocked = true;
+      // Clean up so retry can work
+      if (this.audioCtx) {
+        try {
+          await this.audioCtx.close();
+        } catch {
+          // ignore close errors
+        }
+      }
+      this.audioCtx = null;
+      this.gainNode = null;
+      this.emitTelemetry();
     }
   }
 
@@ -250,15 +279,7 @@ export class WebAudioVoiceDriver implements VoiceDriver {
       // Emit telemetry
       const playedAt = performance.now();
       const latency = playedAt - receivedAt;
-      this.latencies.push(latency);
-      if (this.latencies.length > 100) this.latencies.shift();
-
-      this.bus.emit('voice:telemetry', {
-        latency,
-        p95: this.calculateP95(),
-        bufferCount: this.buffers.size,
-        blocked: this.blocked,
-      });
+      this.recordLatency(latency);
     };
 
     this.currentSource = source;
@@ -310,6 +331,25 @@ export class WebAudioVoiceDriver implements VoiceDriver {
     return sorted[idx] || 0;
   }
 
+  private recordLatency(latency: number): void {
+    if (Number.isFinite(latency)) {
+      this.latencies.push(latency);
+      if (this.latencies.length > MAX_LATENCY_SAMPLES) {
+        this.latencies.shift();
+      }
+    }
+
+    this.emitTelemetry(Number.isFinite(latency) ? latency : null);
+  }
+
+  private emitTelemetry(latency: number | null = null): void {
+    this.bus.emit('voice:telemetry', {
+      latency: latency ?? 0,
+      p95: this.calculateP95(),
+      bufferCount: this.buffers.size,
+    });
+  }
+
   mute(): void {
     this.muted = true;
     if (this.gainNode) {
@@ -345,6 +385,8 @@ export class WebAudioVoiceDriver implements VoiceDriver {
         // ignore
       }
     }
+    this.latencies = [];
+    this.emitTelemetry();
   }
 
   dispose(): void {
@@ -355,6 +397,9 @@ export class WebAudioVoiceDriver implements VoiceDriver {
     }
     this.gainNode = null;
     this.buffers.clear();
+    this.primed = false;
+    this.latencies = [];
+    this.emitTelemetry();
   }
 
   isSpeaking(): boolean {
@@ -366,7 +411,7 @@ export class WebAudioVoiceDriver implements VoiceDriver {
   }
 
   isBlocked(): boolean {
-    return this.blocked;
+    return !this.primed;
   }
 
   getLastSpoken(): string | null {

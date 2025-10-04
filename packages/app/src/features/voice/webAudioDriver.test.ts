@@ -172,6 +172,7 @@ describe('WebAudioVoiceDriver', () => {
       // @ts-expect-error - cleaning up
       delete globalThis.AudioContext;
     }
+
     vi.unstubAllGlobals();
   });
 
@@ -180,7 +181,7 @@ describe('WebAudioVoiceDriver', () => {
     const driver = new WebAudioVoiceDriver(bus);
 
     expect(driver.isPrimed()).toBe(false);
-    expect(driver.isBlocked()).toBe(false);
+    expect(driver.isBlocked()).toBe(true);
     expect(driver.isSpeaking()).toBe(false);
     expect(driver.getLastSpoken()).toBe(null);
   });
@@ -199,6 +200,47 @@ describe('WebAudioVoiceDriver', () => {
     expect(progressEvents.length).toBeGreaterThan(0);
   });
 
+  it('limits latency tracking to recent samples per session', async () => {
+    const bus = new MockBus();
+    const driver = new WebAudioVoiceDriver(bus);
+
+    await driver.prime();
+
+    let currentTime = 0;
+    const nowSpy = vi.spyOn(performance, 'now').mockImplementation(() => currentTime);
+
+    try {
+      for (let i = 0; i < 40; i++) {
+        currentTime = i * 10;
+        driver.handle({ type: 'say_number', value: ((i % 10) + 1) as number });
+        currentTime += 20 + i; // latency grows with i
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+    } finally {
+      nowSpy.mockRestore();
+    }
+
+    const latencies = (driver as unknown as { latencies: number[] }).latencies;
+    expect(latencies.length).toBeLessThanOrEqual(30);
+    expect(latencies[0]).toBe(30);
+    expect(latencies[latencies.length - 1]).toBe(59);
+  });
+
+  it('is idempotent and does not leak AudioContext on double prime', async () => {
+    const bus = new MockBus();
+    const driver = new WebAudioVoiceDriver(bus);
+
+    await driver.prime();
+    bus.clearEvents();
+
+    // Second prime should be a no-op
+    await driver.prime();
+    const secondPrimeProgress = bus.getEvents().filter((e) => e.key === 'voice:decode_progress').length;
+
+    expect(driver.isPrimed()).toBe(true);
+    expect(secondPrimeProgress).toBe(0); // No new decode events
+  });
+
   it('reports blocked if AudioContext fails', async () => {
     // Mock AudioContext to fail resume
     globalThis.AudioContext = class extends MockAudioContext {
@@ -214,6 +256,37 @@ describe('WebAudioVoiceDriver', () => {
 
     expect(driver.isBlocked()).toBe(true);
     expect(driver.isPrimed()).toBe(false);
+  });
+
+  it('allows retry after prime failure', async () => {
+    let resumeCallCount = 0;
+
+    // Mock AudioContext to fail first time, succeed second time
+    globalThis.AudioContext = class extends MockAudioContext {
+      async resume() {
+        resumeCallCount++;
+        if (resumeCallCount === 1) {
+          throw new Error('First attempt fails');
+        }
+        this.state = 'running';
+      }
+    } as unknown as typeof AudioContext;
+
+    const bus = new MockBus();
+    const driver = new WebAudioVoiceDriver(bus);
+
+    // First attempt should fail
+    await driver.prime();
+    expect(driver.isBlocked()).toBe(true);
+    expect(driver.isPrimed()).toBe(false);
+
+    bus.clearEvents();
+
+    // Second attempt should succeed (blocked state resets automatically)
+    await driver.prime();
+    expect(driver.isPrimed()).toBe(true);
+    expect(driver.isBlocked()).toBe(false);
+    expect(resumeCallCount).toBe(2);
   });
 
   it('handles say_number cues', async () => {

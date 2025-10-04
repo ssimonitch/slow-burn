@@ -35,7 +35,6 @@ export type VoiceTelemetry = {
   latency: number;
   p95: number;
   bufferCount: number;
-  blocked: boolean;
 };
 
 export type VoiceDecodeProgress = {
